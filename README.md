@@ -6,7 +6,7 @@
 REQUIREMENTS:
 Server
 
-1. TCP connection on specified port & IP
+1. UDP connection on specified port & IP
 2. Handle forking when more than one client are connected
 3. Print when client connects
 4. Print client's command
@@ -21,7 +21,7 @@ Server
 
 Client
 
-1. TCP connection on specified port and IP
+1. UDP connection on specified port and IP
 2. Send problem data to server
 3. Recieve result data and able to send a new problem
 4. Give feedback to user to user through the terminal
