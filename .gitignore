@@ -1,2 +1,4 @@
 
 *.out
+mathserver/src/client
+mathserver/src/server
