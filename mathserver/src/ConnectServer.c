@@ -12,7 +12,6 @@ void initialize(int port){
    
     // bind server address to socket descriptor
     bind(listenfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
-
 };
 
 void serverInterface(){
@@ -21,7 +20,6 @@ void serverInterface(){
     while(connected == 1){
         int n = recvfrom(listenfd, buffer, sizeof(buffer),
                 0, (struct sockaddr*)&cliaddr,&len); //receive message from client
-
         fprintf(stderr, "%s", buffer);
     }
 }

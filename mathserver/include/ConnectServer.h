@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <stdlib.h>
 #define MAXLINE 1000
 
 char buffer[100];

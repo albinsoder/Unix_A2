@@ -2,15 +2,15 @@ IDIR =/include
 CC=gcc
 CFLAGS=-I$(IDIR)
 
-ODIR=objects
-LDIR =/src
+ODIR=/objects
+LDIR =../lib
 
 LIBS=-lm
 
-_DEPS = hellomake.h
+_DEPS = ConnectServer.h ConnectClient.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = hellomake.o hellofunc.o 
+_OBJ = UDPclient.o UDPserver.o ConnectClient.o ConnectServer.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 
