@@ -2,24 +2,87 @@
 
 void initialize(int port){
 
-    bzero(&servaddr, sizeof(servaddr));
-
-    // Create a UDP Socket
-    listenfd = socket(AF_INET, SOCK_DGRAM, 0);        
-    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servaddr.sin_port = htons(port);
-    servaddr.sin_family = AF_INET; 
-   
-    // bind server address to socket descriptor
-    bind(listenfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+ 
+    // Error handling if socket id is not valid
+    if (sockfd < 0) {
+        printf("Error in connection.\n");
+        exit(1);
+    }
+ 
+    printf("Server Socket is created.\n");
+ 
+    // Initializing address structure with NULL
+    memset(&serverAddr, '\0',sizeof(serverAddr));
+ 
+    // Assign port number and IP address
+    // to the socket created
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(port);
+ 
+    // 127.0.0.1 is a loopback address
+    serverAddr.sin_addr.s_addr= inet_addr("127.0.0.1");
+ 
+    // Binding the socket id with
+    // the socket structure
+    ret = bind(sockfd,(struct sockaddr*)&serverAddr,sizeof(serverAddr));
+ 
+    // Error handling
+    if (ret < 0) {
+        printf("Error in binding.\n");
+        exit(1);
+    }
+    // Listening for connections (upto 10)
+    cnt =0;
+    
 };
 
 void serverInterface(){
-    len = sizeof(cliaddr);
-    connected = 1;
-    while(connected == 1){
-        int n = recvfrom(listenfd, buffer, sizeof(buffer),
-                0, (struct sockaddr*)&cliaddr,&len); //receive message from client
-        fprintf(stderr, "%s", buffer);
+    
+    int connected = 1;
+    if (listen(sockfd, 100) == 0) {
+        printf("Listening for clients...\n\n");
     }
+    while (connected) {
+        // Accept clients and
+        // store their information in cliAddr
+        // printf("Hello");
+        clientSocket = accept(
+            sockfd, (struct sockaddr*)&cliAddr,
+            &addr_size);
+ 
+        // Error handling
+        if (clientSocket < 0) {
+            exit(1);
+        }
+ 
+        // Print number of clients
+        // connected till now
+        cnt++;
+        printf("Connected with client: %d  \n",cnt);
+ 
+        // Creates a child process
+        if ((childpid = fork()) == 0) {
+            // Closing the server socket id
+            close(sockfd);
+            send(clientSocket, "hi client",
+                strlen("hi client"), 0);
+            while(connected){
+                int res = recv(clientSocket, buffer, 1024, 0);
+                if(res == 0){
+                    close(clientSocket);
+                    kill(getpid(), SIGKILL);
+                    break;
+                }
+                printf("Client: %d commanded:", cnt);
+                puts(buffer);
+                bzero(buffer, sizeof(buffer));
+
+                send(clientSocket, "Sending solution: ",strlen("Sending solution:"), 0);
+            }
+        }
+    }
+ 
+    // Close the client socket id
+    close(clientSocket);
 }

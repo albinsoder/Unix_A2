@@ -1,23 +1,24 @@
 #ifndef ConnectClient
 #define ConnectClient
-#include <stdio.h>
-#include <strings.h>
-#include <sys/types.h>
 #include <arpa/inet.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
-#include <unistd.h>
+#include <stdio.h>
 #include <stdlib.h>
-#define MAXLINE 1000
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-char buffer[100];
-char message[100];
-int sockfd, n;
-struct sockaddr_in servaddr;
-int connected; // flag stating if currently connected to server
+
+int clientSocket, ret;
 size_t len;
-char *newMsg;
 
+// Client socket structure
+struct sockaddr_in cliAddr, serverAddr;
+
+// char array to store incoming message
+char buffer[1024];
+char* newMsg;
 
 void initialize(int port, char* ip);
 void connectToServer(char clientNr);

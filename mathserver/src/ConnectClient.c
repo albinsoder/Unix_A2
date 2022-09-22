@@ -2,44 +2,66 @@
 
 void initialize(int port, char* ip){
 
-    bzero(&servaddr, sizeof(servaddr));
-    servaddr.sin_addr.s_addr = inet_addr(ip);
-    servaddr.sin_port = htons(port);
-    servaddr.sin_family = AF_INET;
+    clientSocket = socket(AF_INET,
+                          SOCK_STREAM, 0);
+ 
+    if (clientSocket < 0) {
+        printf("Error in connection.\n");
+        exit(1);
+    }
+    printf("Client Socket is created.\n");
+ 
+    // Initializing socket structure with NULL
+    memset(&cliAddr, '\0', sizeof(cliAddr));
+ 
+    // Initializing buffer array with NULL
+    memset(buffer, '\0', sizeof(buffer));
+ 
+    // Assigning port number and IP address
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(port);
+ 
+    // 127.0.0.1 is Loopback IP
+    serverAddr.sin_addr.s_addr
+        = inet_addr(ip);
 
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
 };
 
 void connectToServer(char clientNr){
-    newMsg = NULL;
-    // for (int i = 0; i < message; i++)
-    // {
-    //     message[i] = " Client1 connected";
-    // }
-    
-    if(connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
-    {
-        printf("\n Error : Connect Failed \n");
-        exit(0);
-    }else {
-        // strcat(message, clientNr);
-        // char concat[21] = " ,Connected to server";
-        // strcat(message, concat);
-        connected=1;
-        sendto(sockfd, message, MAXLINE, 0, (struct sockaddr*)NULL, sizeof(servaddr));
+    ret = connect(clientSocket,(struct sockaddr*)&serverAddr,sizeof(serverAddr));
+ 
+    if (ret < 0) {
+        printf("Error in connection.\n");
+        exit(1);
     }
-
-
+ 
+    printf("Connected to Server.\n");
 
 }
 
 void clientInterface(){
-    while(connected == 1){
-        getline(&newMsg, &len, stdin);
-        sendto(sockfd, newMsg, MAXLINE, 0, (struct sockaddr*)NULL, sizeof(servaddr));
-        fflush(stdin);
+    int connected =1;
+    if (recv(clientSocket, buffer, 1024, 0)< 0) {
+        printf("Error in receiving data.\n");
     }
+    else {
+        printf("Server: %s\n", buffer);
+        bzero(buffer, sizeof(buffer));
+    }
+    newMsg = NULL;
+    while (connected == 1) {
 
-    close(sockfd);
-}
+        getline(&newMsg, &len, stdin);
+        send(clientSocket, newMsg,strlen(newMsg), 0);
+        fflush(stdin);
+        // recv() receives the message
+        // from server and stores in buffer
+        recv(clientSocket, buffer, 1024, 0);
+        puts(buffer);
+        bzero(buffer, sizeof(buffer));
+        // Printing the message on screen
+    }
+    close(clientSocket);
+
+ }

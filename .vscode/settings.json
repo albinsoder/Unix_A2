@@ -2,6 +2,7 @@
     "files.associations": {
         "udpclient.h": "c",
         "connectclient.h": "c",
-        "connectserver.h": "c"
+        "connectserver.h": "c",
+        "types.h": "c"
     }
 }
