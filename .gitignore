@@ -2,3 +2,4 @@
 *.out
 mathserver/src/client
 mathserver/src/server
+mathserver/src/matinv

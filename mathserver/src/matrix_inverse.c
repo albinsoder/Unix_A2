@@ -1,13 +1,15 @@
 /***************************************************************************
  *
  * Sequential version of Matrix Inverse
- * An adapted version of the code by H�kan Grahn
+ * An adapted version of the code by H�kan Grahn
+ * Upgraded to parallell inversion by David Värmfors & Albin Södervall
  ***************************************************************************/
 
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 #define MAX_SIZE 4096
 
@@ -26,12 +28,21 @@ void Init_Matrix(void);
 void Print_Matrix(matrix M, char name[]);
 void Init_Default(void);
 int Read_Options(int, char**);
+void startMat(int, char**);
 
-int
-main(int argc, char** argv)
-{
+// int
+// main(int argc, char** argv)
+// {
+//     startMat(argc, argv);
+// }
+
+void
+startMat(int argc, char** argv){
     printf("Matrix Inverse\n");
     int i, timestart, timeend, iter;
+    pthread_t *children;
+    unsigned long id = 0;
+    children = malloc( MAX_SIZE * sizeof(pthread_t) );
 
     Init_Default();		/* Init default values	*/
     Read_Options(argc, argv);	/* Read arguments	*/
@@ -43,6 +54,7 @@ main(int argc, char** argv)
         //Print_Matrix(A, "End: Input");
         Print_Matrix(I, "Inversed");
     }
+
 }
 
 void find_inverse()

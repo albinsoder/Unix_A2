@@ -25,7 +25,6 @@ void initialize(int port, char* ip){
     serverAddr.sin_addr.s_addr
         = inet_addr(ip);
 
-
 };
 
 void connectToServer(char clientNr){

@@ -1,13 +1,20 @@
 // Main file for mathserver
 // @authors David Värmfors & Albin Södervall
-#include "../include/ConnectClient.h"
-
+// #include "matrix_inverse.c"
+#include <stdio.h>
+#include <string.h>
 // Main function, running the server
 int main(int argc, char *argv[]) {
 
-    initialize(5000,"127.0.0.1");
-    connectToServer(1);
-    clientInterface();
+    // initialize(5000,"127.0.0.1");
+    // connectToServer(1);
+    // clientInterface();
+    char buffer[1024] = "matinvers -P 1";
+
+    char *p;
+
+    p= strtok(buffer, " ");
+    printf("%s", p);
 
         // if (argc == 3 && argv[1][0] == '-' && argv[1][1] == 'p'){
     //     int port = atoi(argv[2]);
