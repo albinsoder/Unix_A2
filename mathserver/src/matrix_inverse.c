@@ -5,39 +5,29 @@
  * Upgraded to parallell inversion by David Värmfors & Albin Södervall
  ***************************************************************************/
 
-#include <stdio.h>
-#include <assert.h>
-#include <string.h>
-#include <stdlib.h>
-#include <pthread.h>
 
-#define MAX_SIZE 4096
+#include "../include/matrix_inverse.h"
 
-typedef double matrix[MAX_SIZE][MAX_SIZE];
-
-int	N;		/* matrix size		*/
-int	maxnum;		/* max number of element*/
-char* Init;		/* matrix init type	*/
-int	PRINT;		/* print switch		*/
-matrix	A;		/* matrix A		*/
-matrix I = {0.0};  /* The A inverse matrix, which will be initialized to the identity matrix */
-
-/* forward declarations */
-void find_inverse(void);
-void Init_Matrix(void);
-void Print_Matrix(matrix M, char name[]);
-void Init_Default(void);
-int Read_Options(int, char**);
-void startMat(int, char**);
+matrix I = {0.0};
 
 // int
 // main(int argc, char** argv)
 // {
-//     startMat(argc, argv);
+//     for(int j=0; j<argc; j++){
+//         // for (int i = 0; i < 6; i++)
+//         // {
+//         //     printf("%s", argv[j]);
+//         // }
+//         printf("%s", argv[j]);
+//     }
+//     printf("%d", argc);
 // }
 
 void
 startMat(int argc, char** argv){
+    // printf("Hej");
+    // puts(argv);
+    printf("%i\n", argc);
     printf("Matrix Inverse\n");
     int i, timestart, timeend, iter;
     pthread_t *children;
@@ -92,7 +82,6 @@ void
 Init_Matrix()
 {
     int row, col;
-
     // Set the diagonal elements of the inverse matrix to 1.0
     // So that you get an identity matrix to begin with
     for (row = 0; row < N; row++) {
@@ -162,13 +151,66 @@ Init_Default()
 int
 Read_Options(int argc, char** argv)
 {
+    // printf("%d", argc);
     char* prog;
-
     prog = *argv;
+    // printf("\n");
+    // for(int i=0; i<1024; i++){
+    //     for(int k=0; k<1024; k++){
+    //         printf("%d", argv[i][k]);
+    //     }
+    // }
+
+    // for(int j=0; j<1024; j++){
+    //     // printf("%d HÄR", argv[1][j]);
+    //     if(**argv == 45){
+    //         switch(argv[0][j++]){
+    //             case 'n':
+    //                 printf("VI NÅDDE N");
+    //                 N = atoi(argv[j+2]);
+    //                 break;
+    //             case 'h':
+    //                 printf("\nHELP: try matinv -u \n\n");
+    //                 exit(0);
+    //                 break;
+    //             case 'u':
+    //                 printf("\nUsage: matinv [-n problemsize]\n");
+    //                 printf("           [-D] show default values \n");
+    //                 printf("           [-h] help \n");
+    //                 printf("           [-I init_type] fast/rand \n");
+    //                 printf("           [-m maxnum] max random no \n");
+    //                 printf("           [-P print_switch] 0/1 \n");
+    //                 exit(0);
+    //                 break;
+    //             case 'D':
+    //                 printf("\nDefault:  n         = %d ", N);
+    //                 printf("\n          Init      = rand");
+    //                 printf("\n          maxnum    = 5 ");
+    //                 printf("\n          P         = 0 \n\n");
+    //                 exit(0);
+    //                 break;
+    //             case 'I':
+    //                 Init = *++argv;
+    //                 break;
+    //             default:
+    //             printf("%s: ignored option: -%s\n", prog, *argv);
+    //             printf("HELP: try %s -u \n\n", prog);
+    //             break;
+    //         }
+    //     }
+    // }
+
+    // printf("%i \n", argc);
+    // for(int j=0; j<1024; j++){
+    //     printf("%s", argv[j]);
+    // }
     while (++argv, --argc > 0)
+        printf("%d HÄR BAJS", **argv);
         if (**argv == '-')
+            printf("HITTADE EN SÅDAN - HAHAHA LOLEXDE\n");
             switch (*++ * argv) {
             case 'n':
+                printf("-n\n");
                 --argc;
                 N = atoi(*++argv);
                 break;
@@ -193,6 +235,7 @@ Read_Options(int argc, char** argv)
                 exit(0);
                 break;
             case 'I':
+                printf("-I\n");
                 --argc;
                 Init = *++argv;
                 break;
@@ -201,6 +244,7 @@ Read_Options(int argc, char** argv)
                 maxnum = atoi(*++argv);
                 break;
             case 'P':
+                printf("-P\n");
                 --argc;
                 PRINT = atoi(*++argv);
                 break;

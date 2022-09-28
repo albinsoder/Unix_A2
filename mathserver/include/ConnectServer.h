@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <pthread.h>
+#include "matrix_inverse.h"
 
 // Int setup
 int sockfd, ret, cnt, commandRes;
@@ -26,7 +27,6 @@ struct sockaddr_in cliAddr;
 // Stores server socket address
 socklen_t addr_size;
 char buffer[1024];
-char** buff;
 
 // Child process id
 pid_t childpid;
@@ -37,6 +37,11 @@ char copyBuffer[1024];
 void initialize(int port);
 // Interface waiting for commands from clients
 void serverInterface();
-int readBuffer(char** copyBuffer);
-int countArg(char** copyBuffer);
+// Filter input from client, check if kmeans or matinv is to be run
+// and perform the asked for calculations
+int readBuffer(char copyBuffer[1024]);
+// Count number of arguments found in input from client
+int countArg(char copyBuffer[1024]);
+// Calculate size of char pointer array
+char * rmWhitespace(char* inBuff);
 #endif

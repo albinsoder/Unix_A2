@@ -1,7 +1,5 @@
 #include "../include/ConnectServer.h"
 
-// #include "../src/matrix_inverse.c"
-
 void initialize(int port){
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -83,7 +81,7 @@ void serverInterface(){
                 {
                     send(clientSocket, "Faulty input, please input new command!",40, 0);
                 }
-                
+                commandRes = 0;
                 puts(buffer);
                 bzero(buffer, sizeof(buffer));
                 bzero(copyBuffer, sizeof(buffer));
@@ -98,40 +96,59 @@ void serverInterface(){
     close(clientSocket);
 }
 
-int readBuffer(char** copyBuffer){
+int readBuffer(char copyBuffer[1024]){
 
+    char buff[1024];
+    strncpy(buff, copyBuffer, 1024);
     firstArg = strtok(copyBuffer, " ");
-    strncpy(buff, copyBuffer, sizeof(copyBuffer));
     char* kmeans = "kmeans";
     char* matinv = "matinvpar";
     int args = 0;
 
     if(strcmp(firstArg, kmeans) == 0){
-        printf("kmeans");
+        printf("kmeans \n");
         // Count number of args
-        args = countArg(copyBuffer);
+        args = countArg(buff);
         //call kmeans function
     }
     else if(strcmp(firstArg, matinv) == 0){
-        printf("matinv");
-        args = countArg(copyBuffer);
-        // startMat(args, buff);
+        printf("matinv \n");
+        char* tmpBuff;
+        args = countArg(buff);
+        tmpBuff = rmWhitespace(buff);
+        char** newBuff = &tmpBuff;
+        startMat(args, newBuff);
     }
     else {
         printf("Faulty input");
         return -1;
     }
-
-
     return 0;
 }
 
-int countArg(char** copyBuffer){
+int countArg(char copyBuffer[1024]){
     int count=0;
-    for(int i=0; i<sizeof(&copyBuffer); i++){
-        if(copyBuffer[i] == "-"){
+    for(int j=0; j<1024; j++){
+        if(copyBuffer[j] == ' '){
             count++;
         }
     }
-    return count++;
+    count++;
+    return count;
+}
+
+char* rmWhitespace(char* inBuff)                                         
+{
+    int i,j;
+    char *outBuff=inBuff;
+    for (i = 0, j = 0; i<strlen(inBuff); i++,j++)          
+    {
+        if (inBuff[i]!=' ')                           
+            outBuff[j]=inBuff[i];                     
+        else
+            j--;                                     
+    }
+    outBuff[j]=0;
+    printf("%s", outBuff);
+    return outBuff;
 }

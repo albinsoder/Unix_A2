@@ -3,6 +3,7 @@
         "udpclient.h": "c",
         "connectclient.h": "c",
         "connectserver.h": "c",
-        "types.h": "c"
+        "types.h": "c",
+        "matrix_inverse.h": "c"
     }
 }
