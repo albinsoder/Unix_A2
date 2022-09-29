@@ -43,7 +43,7 @@ int readBuffer(char copyBuffer[1024]);
 // Count number of arguments found in input from client
 int countArg(char copyBuffer[1024]);
 // Calculate size of char pointer array
-char* rmWhitespace(char* inBuff);
+// char* rmWhitespace(char* inBuff);
 void startMat(int argc, char** argv);
 
 #endif

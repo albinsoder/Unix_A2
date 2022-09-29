@@ -26,7 +26,9 @@ void find_inverse(void);
 void Init_Matrix(void);
 void Print_Matrix(matrix M, char name[]);
 void Init_Default(void);
-void Read_Option(int arguments, char** buffer);
+void Read_Option(char buff[1024]);
+// void Read_Options(char*);
+// char findNext2(int pos, char* buff);
 void matStart(int argc, char** argv);
 
 #endif

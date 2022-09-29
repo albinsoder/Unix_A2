@@ -104,7 +104,7 @@ int readBuffer(char copyBuffer[1024]){
     char* kmeans = "kmeans";
     char* matinv = "matinvpar";
     int args = 0;
-    char* newBuff = buff;
+    // char* newBuff = buff;
     // char** gBuff = &newBuff;
 
     if(strcmp(firstArg, kmeans) == 0){
@@ -120,17 +120,18 @@ int readBuffer(char copyBuffer[1024]){
         args=7;
         // printf("Innan startmat\n");
         Init_Default();		/* Init default values	*/
+        Read_Option(buff);	/* Read arguments	*/
         // tmpBuff = rmWhitespace(buff);
-        printf("ded");
+        // printf("%s", tmpBuff[0]);
+        // printf("ded");
         // char** gBuff = {'-','n'};
         // char disp[2][4] = {
         // {'-', 'n', '-', 'I'},
         // {'a', 'D', 's', 'a'}
         // };
         // [0][0] = "-"
-        Read_Option(args, newBuff);	/* Read arguments	*/
-        Init_Matrix();		/* Init the matrix	*/
-        find_inverse();
+        // Init_Matrix();		/* Init the matrix	*/
+        // find_inverse();
         // printf("%s", tmpBuff);
         // printf("Innan startmat ye\n");
         // startMat(args, newBuff);
@@ -154,21 +155,32 @@ int countArg(char copyBuffer[1024]){
     return count;
 }
 
-char* rmWhitespace(char* inBuff)                                         
-{
-    int i,j;
-    char *outBuff=inBuff;
-    for (i = 0, j = 0; i<strlen(inBuff); i++,j++)          
-    {
-        if (inBuff[i]!=' ')                           
-            outBuff[j]=inBuff[i];                     
-        else
-            j--;                                     
-    }
-    outBuff[j]=0;
-    // printf("%s", outBuff);
-    return outBuff;
-}
+// char* rmWhitespace(char* inBuff)                                         
+// {
+//     int len = 0; // Length of current command
+//     int j=0; // tmpBuff's position at end of a command
+//     char outBuff[1024]; //2D Array
+//     char tmpBuff[1024]; //1D Array
+//     // printf("InBuff: %s", inBuff);
+//     printf("strlen: %li", strlen(inBuff));
+//     for (int i=0; i<strlen(inBuff); i++)          
+//     {
+//         // printf("Inbuff per gång: %s", &inBuff[i]);
+//         tmpBuff[j] = inBuff[i];
+//         j++;
+//         if (inBuff[i] == ' '){
+//             // puts(tmpBuff);
+//             outBuff[len] = tmpBuff;
+//             printf("OUTBUFF: %s", outBuff[len]);
+//             len++;
+//             j=0;
+//             bzero(tmpBuff, sizeof(tmpBuff));
+//         }
+            
+//     }
+//     // printf("%s", outBuff);
+//     return outBuff;
+// }
 
 // void startMat(int argc, char** argv){
 //     printf("Här");
