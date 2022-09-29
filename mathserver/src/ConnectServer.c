@@ -80,7 +80,7 @@ void serverInterface(){
                 if (commandRes == -1)
                 {
                     send(clientSocket, "Faulty input, please input new command!",40, 0);
-                }
+                } 
                 commandRes = 0;
                 puts(buffer);
                 bzero(buffer, sizeof(buffer));
@@ -104,6 +104,8 @@ int readBuffer(char copyBuffer[1024]){
     char* kmeans = "kmeans";
     char* matinv = "matinvpar";
     int args = 0;
+    char* newBuff = buff;
+    // char** gBuff = &newBuff;
 
     if(strcmp(firstArg, kmeans) == 0){
         printf("kmeans \n");
@@ -114,10 +116,25 @@ int readBuffer(char copyBuffer[1024]){
     else if(strcmp(firstArg, matinv) == 0){
         printf("matinv \n");
         char* tmpBuff;
-        args = countArg(buff);
-        tmpBuff = rmWhitespace(buff);
-        char** newBuff = &tmpBuff;
-        startMat(args, newBuff);
+        // args = countArg(buff);
+        args=7;
+        // printf("Innan startmat\n");
+        Init_Default();		/* Init default values	*/
+        // tmpBuff = rmWhitespace(buff);
+        printf("ded");
+        // char** gBuff = {'-','n'};
+        // char disp[2][4] = {
+        // {'-', 'n', '-', 'I'},
+        // {'a', 'D', 's', 'a'}
+        // };
+        // [0][0] = "-"
+        Read_Option(args, newBuff);	/* Read arguments	*/
+        Init_Matrix();		/* Init the matrix	*/
+        find_inverse();
+        // printf("%s", tmpBuff);
+        // printf("Innan startmat ye\n");
+        // startMat(args, newBuff);
+        return 0;
     }
     else {
         printf("Faulty input");
@@ -149,6 +166,15 @@ char* rmWhitespace(char* inBuff)
             j--;                                     
     }
     outBuff[j]=0;
-    printf("%s", outBuff);
+    // printf("%s", outBuff);
     return outBuff;
 }
+
+// void startMat(int argc, char** argv){
+//     printf("Här");
+//     Init_Default();		/* Init default values	*/
+//     Read_Option(argc, argv);	/* Read arguments	*/
+//     Init_Matrix();		/* Init the matrix	*/
+//     find_inverse();
+
+// }

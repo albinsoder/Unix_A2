@@ -19,13 +19,14 @@ int	PRINT;		/* print switch		*/
 matrix	A;		/* matrix A		*/
   /* The A inverse matrix, which will be initialized to the identity matrix */
 
+int i, timestart, timeend, iter;
 
 /* forward declarations */
 void find_inverse(void);
 void Init_Matrix(void);
 void Print_Matrix(matrix M, char name[]);
 void Init_Default(void);
-int Read_Options(int, char**);
-void startMat(int argc, char** argv);
+void Read_Option(int arguments, char** buffer);
+void matStart(int argc, char** argv);
 
 #endif
