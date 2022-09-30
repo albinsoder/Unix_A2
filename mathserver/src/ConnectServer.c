@@ -60,7 +60,8 @@ void serverInterface(){
         // connected till now
         cnt++;
         printf("Connected with client: %d  \n",cnt);
- 
+        buffer = malloc(1024);
+        // copyBuffer = malloc(1024);
         // Creates a child process
         if ((childpid = fork()) == 0) {
             // Closing the server socket id
@@ -75,16 +76,18 @@ void serverInterface(){
                     break;
                 }
                 printf("Client: %d commanded:", cnt);
-                strncpy(copyBuffer, buffer, sizeof(buffer));
-                commandRes = readBuffer(copyBuffer);
+                // strncpy(copyBuffer, buffer, sizeof(buffer));
+                commandRes = readBuffer(buffer);
                 if (commandRes == -1)
                 {
                     send(clientSocket, "Faulty input, please input new command!",40, 0);
                 } 
                 commandRes = 0;
                 puts(buffer);
-                bzero(buffer, sizeof(buffer));
-                bzero(copyBuffer, sizeof(buffer));
+                free(buffer);
+                // free(copyBuffer);
+                // bzero(buffer, sizeof(buffer));
+                // bzero(copyBuffer, sizeof(buffer));
                 // bzero(buffer, sizeof(buffer));
 
                 send(clientSocket, "Sending solution: ",strlen("Sending solution:"), 0);
@@ -96,45 +99,67 @@ void serverInterface(){
     close(clientSocket);
 }
 
-int readBuffer(char copyBuffer[1024]){
+int readBuffer(char* buff){
 
-    char buff[1024];
-    strncpy(buff, copyBuffer, 1024);
-    firstArg = strtok(copyBuffer, " ");
-    char* kmeans = "kmeans";
-    char* matinv = "matinvpar";
+    // char* buff = malloc(1024);
+    // strncpy(buff, copyBuffer, 1024);
+    // firstArg = strtok(copyBuffer, " ");
+    char* kmeans = "k";
+    char* matinv = "m";
     int args = 0;
     // char* newBuff = buff;
     // char** gBuff = &newBuff;
 
-    if(strcmp(firstArg, kmeans) == 0){
+    printf("%s", firstArg);
+    if(buff[0] == 'k'){
         printf("kmeans \n");
         // Count number of args
         args = countArg(buff);
         //call kmeans function
     }
-    else if(strcmp(firstArg, matinv) == 0){
+    else if(buff[0] == 'm'){
         printf("matinv \n");
-        char* tmpBuff;
-        // args = countArg(buff);
+        char** tmpBuff = (char**)malloc(1024);
+        char* newBuff = malloc(1024);
+        printf("Buff: %s \n", buff);
         args=7;
-        // printf("Innan startmat\n");
-        Init_Default();		/* Init default values	*/
-        Read_Option(buff);	/* Read arguments	*/
-        // tmpBuff = rmWhitespace(buff);
-        // printf("%s", tmpBuff[0]);
-        // printf("ded");
-        // char** gBuff = {'-','n'};
-        // char disp[2][4] = {
-        // {'-', 'n', '-', 'I'},
-        // {'a', 'D', 's', 'a'}
-        // };
-        // [0][0] = "-"
+        int j=0;
+        int len=0;
+        for (int i=0; i<1024; i++)          
+        {
+            // printf("Inbuff per gång: %s", &inBuff[i]);
+            printf("Buff: %c\n", buff[i]);
+            newBuff[j] = buff[i];
+            j++;
+            if(buff[i] == '\0'){
+                tmpBuff[len] = (char*)malloc(strlen(newBuff)+1);
+                strcpy(tmpBuff[len], newBuff);
+                free(newBuff);
+                break;
+            }
+            if (buff[i] == ' '){
+                // puts(tmpBuff);
+                tmpBuff[len] = (char*)malloc(strlen(newBuff)+1);
+                strcpy(tmpBuff[len], newBuff);
+                
+                // printf("OUTBUFF: %s", outBuff[len]);
+                len++;
+                j=0;
+                free(newBuff);
+                newBuff = malloc(1024);
+            }
+                
+        }
+        free(buff);
+        
+        printf("HALLÅ: %c \n", tmpBuff[0][1]);
+        matStart(7, tmpBuff);
+        // Init_Default();		/* Init default values	*/
+        // Read_Option(7, tmpBuff);	/* Read arguments	*/
+        // // tmpBuff = rmWhitespace(buff);
         // Init_Matrix();		/* Init the matrix	*/
         // find_inverse();
-        // printf("%s", tmpBuff);
-        // printf("Innan startmat ye\n");
-        // startMat(args, newBuff);
+
         return 0;
     }
     else {
@@ -155,32 +180,34 @@ int countArg(char copyBuffer[1024]){
     return count;
 }
 
-// char* rmWhitespace(char* inBuff)                                         
-// {
-//     int len = 0; // Length of current command
-//     int j=0; // tmpBuff's position at end of a command
-//     char outBuff[1024]; //2D Array
-//     char tmpBuff[1024]; //1D Array
-//     // printf("InBuff: %s", inBuff);
-//     printf("strlen: %li", strlen(inBuff));
-//     for (int i=0; i<strlen(inBuff); i++)          
-//     {
-//         // printf("Inbuff per gång: %s", &inBuff[i]);
-//         tmpBuff[j] = inBuff[i];
-//         j++;
-//         if (inBuff[i] == ' '){
-//             // puts(tmpBuff);
-//             outBuff[len] = tmpBuff;
-//             printf("OUTBUFF: %s", outBuff[len]);
-//             len++;
-//             j=0;
-//             bzero(tmpBuff, sizeof(tmpBuff));
-//         }
+char** rmWhitespace(char* inBuff)                                         
+{
+    int len = 0; // Length of current command
+    int j=0; // tmpBuff's position at end of a command
+    char** outBuff; //2D Array
+    char* tmpBuff; //1D Array
+    // memset(outBuff, '\0', siz)
+    // printf("InBuff: %s", inBuff);
+    // printf("strlen:");
+    for (int i=0; i<strlen(inBuff); i++)          
+    {
+        // printf("Inbuff per gång: %s", &inBuff[i]);
+        tmpBuff[j] = inBuff[i];
+        j++;
+        if (inBuff[i] == ' '){
+            // puts(tmpBuff);
+            // strcpy(outBuff[len], tmpBuff);
             
-//     }
-//     // printf("%s", outBuff);
-//     return outBuff;
-// }
+            // printf("OUTBUFF: %s", outBuff[len]);
+            len++;
+            j=0;
+            bzero(tmpBuff, sizeof(tmpBuff));
+        }
+            
+    }
+    printf("Här borde vara n: %c", outBuff[1][2]);
+    return outBuff;
+}
 
 // void startMat(int argc, char** argv){
 //     printf("Här");

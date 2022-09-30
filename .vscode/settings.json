@@ -4,6 +4,7 @@
         "connectclient.h": "c",
         "connectserver.h": "c",
         "types.h": "c",
-        "matrix_inverse.h": "c"
+        "matrix_inverse.h": "c",
+        "assert.h": "c"
     }
 }

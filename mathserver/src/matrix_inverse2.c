@@ -2,43 +2,40 @@
  *
  * Sequential version of Matrix Inverse
  * An adapted version of the code by H�kan Grahn
- * Upgraded to parallell inversion by David Värmfors & Albin Södervall
  ***************************************************************************/
 
+#include "../include/matrix_inverse2.h"
 
-#include "../include/matrix_inverse.h"
 
-matrix I = {0.0};
+/* forward declarations */
+
 
 // int
 // main(int argc, char** argv)
 // {
 //     printf("Matrix Inverse\n");
 //     int i, timestart, timeend, iter;
-//     Init_Default(); /* Init default values */
-//     Read_Option(argc, argv); /* Read arguments */
-//     Init_Matrix(); /* Init the matrix */
+
+//     Init_Default();		/* Init default values	*/
+//     Read_Options(argc, argv);	/* Read arguments	*/
+//     Init_Matrix();		/* Init the matrix	*/
 //     find_inverse();
+
 //     if (PRINT == 1)
 //     {
 //         //Print_Matrix(A, "End: Input");
 //         Print_Matrix(I, "Inversed");
 //     }
 // }
+matrix I = {0.0};
 
-void matStart(int argc, char** argv)
-{
-    // printf("Hej");
-    // puts(argv);
-    // printf("%i\n", argc);
+int
+matStart(int argc, char** argv){
     printf("Matrix Inverse\n");
     int i, timestart, timeend, iter;
-    // pthread_t *children;
-    // unsigned long id = 0;
-    // children = malloc( MAX_SIZE * sizeof(pthread_t) );
 
     Init_Default();		/* Init default values	*/
-    Read_Option(argc, argv);	/* Read argc	*/
+    // Read_Options(argc, argv);	/* Read arguments	*/
     Init_Matrix();		/* Init the matrix	*/
     find_inverse();
 
@@ -46,7 +43,7 @@ void matStart(int argc, char** argv)
     {
         //Print_Matrix(A, "End: Input");
         Print_Matrix(I, "Inversed");
-    }
+    }    
 }
 
 void find_inverse()
@@ -84,6 +81,7 @@ void
 Init_Matrix()
 {
     int row, col;
+
     // Set the diagonal elements of the inverse matrix to 1.0
     // So that you get an identity matrix to begin with
     for (row = 0; row < N; row++) {
@@ -123,7 +121,7 @@ Init_Matrix()
     if (PRINT == 1)
     {
         //Print_Matrix(A, "Begin: Input");
-        Print_Matrix(I, "Begin: Inverse");
+        //Print_Matrix(I, "Begin: Inverse");
     }
 }
 
@@ -148,11 +146,10 @@ Init_Default()
     Init = "fast";
     maxnum = 15.0;
     PRINT = 1;
-    printf("INIT FÄRDIG");
 }
 
 int
-Read_Option(int argc, char** argv)
+Read_Options(int argc, char** argv)
 {
     char* prog;
 
