@@ -10,7 +10,8 @@
 #include <unistd.h>
 #include <signal.h>
 #include <pthread.h>
-#include "matrix_inverse2.h"
+#include "matrix_inverse.h"
+#include "kmeans.h"
 
 // Int setup
 int sockfd, ret, cnt, commandRes;
@@ -41,9 +42,5 @@ void serverInterface();
 // and perform the asked for calculations
 int readBuffer(char* copyBuffer);
 // Count number of arguments found in input from client
-int countArg(char* copyBuffer);
-// Calculate size of char pointer array
-char** rmWhitespace(char* inBuff);
-void startMat(int argc, char** argv);
 
 #endif

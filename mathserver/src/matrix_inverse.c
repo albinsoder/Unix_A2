@@ -2,45 +2,36 @@
  *
  * Sequential version of Matrix Inverse
  * An adapted version of the code by H�kan Grahn
- * Upgraded to parallell inversion by David Värmfors & Albin Södervall
  ***************************************************************************/
-
 
 #include "../include/matrix_inverse.h"
 
+
+/* forward declarations */
+
 matrix I = {0.0};
 
-// int
-// main(int argc, char** argv)
-// {
-//     printf("Matrix Inverse\n");
-//     int i, timestart, timeend, iter;
-//     Init_Default(); /* Init default values */
-//     Read_Option(argc, argv); /* Read arguments */
-//     Init_Matrix(); /* Init the matrix */
-//     find_inverse();
-//     if (PRINT == 1)
-//     {
-//         //Print_Matrix(A, "End: Input");
-//         Print_Matrix(I, "Inversed");
-//     }
-// }
-
-void matStart(int argc, char** argv)
+int
+main(int argc, char** argv)
 {
-    // printf("Hej");
-    // puts(argv);
-    // printf("%i\n", argc);
     printf("Matrix Inverse\n");
     int i, timestart, timeend, iter;
-    // pthread_t *children;
-    // unsigned long id = 0;
-    // children = malloc( MAX_SIZE * sizeof(pthread_t) );
-
+    unsigned long id=0;
+    
     Init_Default();		/* Init default values	*/
-    Read_Option(argc, argv);	/* Read argc	*/
-    Init_Matrix();		/* Init the matrix	*/
-    find_inverse();
+    Read_Options(argc, argv);	/* Read arguments	*/
+    pthread_create(&(children[id]), NULL, Init_Matrix, NULL); // Let main thread run the init of matrix
+    int nThreads = N;
+    for(id=1; id<nThreads; id++){
+        pthread_create(&(children[id-1]), NULL, find_inverse, (void*)id);
+    }
+    find_inverse(0);
+    for(id = 1; id<nThreads+1; id++){
+        pthread_join(children[id-1], NULL);
+    }
+    free(children);
+    // Init_Matrix();		/* Init the matrix	*/
+    // find_inverse();
 
     if (PRINT == 1)
     {
@@ -49,11 +40,28 @@ void matStart(int argc, char** argv)
     }
 }
 
-void find_inverse()
+int
+start_mat(int argc, char** argv){
+    printf("Matrix Inverse\n");
+    int i, timestart, timeend, iter;
+
+    Init_Default();		/* Init default values	*/
+    Read_Options(argc, argv);	/* Read arguments	*/
+    Init_Matrix();		/* Init the matrix	*/
+    find_inverse();
+
+    if (PRINT == 1)
+    {
+        //Print_Matrix(A, "End: Input");
+        Print_Matrix(I, "Inversed");
+    }    
+}
+
+void find_inverse(void* thread_id)
 {
+    unsigned long id = (unsigned long)thread_id;
     int row, col, p; // 'p' stands for pivot (numbered from 0 to N-1)
     double pivalue; // pivot value
-
     /* Bringing the matrix A to the identity form */
     for (p = 0; p < N; p++) { /* Outer loop */
         pivalue = A[p][p];
@@ -84,6 +92,7 @@ void
 Init_Matrix()
 {
     int row, col;
+
     // Set the diagonal elements of the inverse matrix to 1.0
     // So that you get an identity matrix to begin with
     for (row = 0; row < N; row++) {
@@ -98,7 +107,7 @@ Init_Matrix()
     printf("Init	  = %s \n", Init);
     printf("Initializing matrix...");
 
-    if (strcmp(Init, "rand") == 0) {
+    if (Init[0] == 'r') {
         for (row = 0; row < N; row++) {
             for (col = 0; col < N; col++) {
                 if (row == col) /* diagonal dominance */
@@ -108,7 +117,8 @@ Init_Matrix()
             }
         }
     }
-    if (strcmp(Init, "fast") == 0) {
+    // printf("LENGTH: %ld", strlen(Init));
+    if (Init[0] == 'f') {
         for (row = 0; row < N; row++) {
             for (col = 0; col < N; col++) {
                 if (row == col) /* diagonal dominance */
@@ -123,7 +133,7 @@ Init_Matrix()
     if (PRINT == 1)
     {
         //Print_Matrix(A, "Begin: Input");
-        Print_Matrix(I, "Begin: Inverse");
+        //Print_Matrix(I, "Begin: Inverse");
     }
 }
 
@@ -148,11 +158,10 @@ Init_Default()
     Init = "fast";
     maxnum = 15.0;
     PRINT = 1;
-    printf("INIT FÄRDIG");
 }
 
 int
-Read_Option(int argc, char** argv)
+Read_Options(int argc, char** argv)
 {
     char* prog;
 

@@ -76,6 +76,7 @@ void serverInterface(){
                     break;
                 }
                 printf("Client: %d commanded:", cnt);
+                puts(buffer);
                 // strncpy(copyBuffer, buffer, sizeof(buffer));
                 commandRes = readBuffer(buffer);
                 if (commandRes == -1)
@@ -83,7 +84,6 @@ void serverInterface(){
                     send(clientSocket, "Faulty input, please input new command!",40, 0);
                 } 
                 commandRes = 0;
-                puts(buffer);
                 free(buffer);
                 // free(copyBuffer);
                 // bzero(buffer, sizeof(buffer));
@@ -101,34 +101,22 @@ void serverInterface(){
 
 int readBuffer(char* buff){
 
-    // char* buff = malloc(1024);
-    // strncpy(buff, copyBuffer, 1024);
-    // firstArg = strtok(copyBuffer, " ");
-    char* kmeans = "k";
-    char* matinv = "m";
-    int args = 0;
-    // char* newBuff = buff;
-    // char** gBuff = &newBuff;
-
-    printf("%s", firstArg);
     if(buff[0] == 'k'){
         printf("kmeans \n");
-        // Count number of args
-        args = countArg(buff);
-        //call kmeans function
+        start_kmeans();
+        return 0;
+
     }
     else if(buff[0] == 'm'){
-        printf("matinv \n");
+        // printf("matinv \n");
         char** tmpBuff = (char**)malloc(1024);
         char* newBuff = malloc(1024);
-        printf("Buff: %s \n", buff);
-        args=7;
-        int j=0;
-        int len=0;
+        int j,len,countArg;
+        j=0;
+        len=0;
+        countArg=0;
         for (int i=0; i<1024; i++)          
         {
-            // printf("Inbuff per gång: %s", &inBuff[i]);
-            printf("Buff: %c\n", buff[i]);
             newBuff[j] = buff[i];
             j++;
             if(buff[i] == '\0'){
@@ -138,11 +126,10 @@ int readBuffer(char* buff){
                 break;
             }
             if (buff[i] == ' '){
-                // puts(tmpBuff);
+                countArg++;
                 tmpBuff[len] = (char*)malloc(strlen(newBuff)+1);
+                newBuff[j] = '\0';
                 strcpy(tmpBuff[len], newBuff);
-                
-                // printf("OUTBUFF: %s", outBuff[len]);
                 len++;
                 j=0;
                 free(newBuff);
@@ -150,16 +137,7 @@ int readBuffer(char* buff){
             }
                 
         }
-        free(buff);
-        
-        printf("HALLÅ: %c \n", tmpBuff[0][1]);
-        matStart(7, tmpBuff);
-        // Init_Default();		/* Init default values	*/
-        // Read_Option(7, tmpBuff);	/* Read arguments	*/
-        // // tmpBuff = rmWhitespace(buff);
-        // Init_Matrix();		/* Init the matrix	*/
-        // find_inverse();
-
+        start_mat(countArg, tmpBuff);
         return 0;
     }
     else {
@@ -168,52 +146,3 @@ int readBuffer(char* buff){
     }
     return 0;
 }
-
-int countArg(char copyBuffer[1024]){
-    int count=0;
-    for(int j=0; j<1024; j++){
-        if(copyBuffer[j] == ' '){
-            count++;
-        }
-    }
-    count++;
-    return count;
-}
-
-char** rmWhitespace(char* inBuff)                                         
-{
-    int len = 0; // Length of current command
-    int j=0; // tmpBuff's position at end of a command
-    char** outBuff; //2D Array
-    char* tmpBuff; //1D Array
-    // memset(outBuff, '\0', siz)
-    // printf("InBuff: %s", inBuff);
-    // printf("strlen:");
-    for (int i=0; i<strlen(inBuff); i++)          
-    {
-        // printf("Inbuff per gång: %s", &inBuff[i]);
-        tmpBuff[j] = inBuff[i];
-        j++;
-        if (inBuff[i] == ' '){
-            // puts(tmpBuff);
-            // strcpy(outBuff[len], tmpBuff);
-            
-            // printf("OUTBUFF: %s", outBuff[len]);
-            len++;
-            j=0;
-            bzero(tmpBuff, sizeof(tmpBuff));
-        }
-            
-    }
-    printf("Här borde vara n: %c", outBuff[1][2]);
-    return outBuff;
-}
-
-// void startMat(int argc, char** argv){
-//     printf("Här");
-//     Init_Default();		/* Init default values	*/
-//     Read_Option(argc, argv);	/* Read arguments	*/
-//     Init_Matrix();		/* Init the matrix	*/
-//     find_inverse();
-
-// }
