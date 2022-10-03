@@ -11,88 +11,115 @@
 
 matrix I = {0.0};
 
+pthread_mutex_t mutex;
 int
 main(int argc, char** argv)
 {
     printf("Matrix Inverse\n");
     int i, timestart, timeend, iter;
     unsigned long id=0;
-    
+
     Init_Default();		/* Init default values	*/
     Read_Options(argc, argv);	/* Read arguments	*/
-    pthread_create(&(children[id]), NULL, Init_Matrix, NULL); // Let main thread run the init of matrix
-    int nThreads = N;
-    for(id=1; id<nThreads; id++){
-        pthread_create(&(children[id-1]), NULL, find_inverse, (void*)id);
-    }
-    find_inverse(0);
-    for(id = 1; id<nThreads+1; id++){
-        pthread_join(children[id-1], NULL);
-    }
-    free(children);
+    Init_Matrix((void*)id);
+    // Init_Matrix(NULL);
+    find_inverse();
     // Init_Matrix();		/* Init the matrix	*/
     // find_inverse();
 
     if (PRINT == 1)
     {
-        //Print_Matrix(A, "End: Input");
+        Print_Matrix(A, "End: Input");
         Print_Matrix(I, "Inversed");
     }
+}
+void* child(void* buf){
+    unsigned long childID = (unsigned long)buf;
+    find_inverse(childID);
+    return NULL;
 }
 
 int
 start_mat(int argc, char** argv){
-    printf("Matrix Inverse\n");
-    int i, timestart, timeend, iter;
+    // printf("Matrix Inverse\n");
+    // int i, timestart, timeend, iter;
 
-    Init_Default();		/* Init default values	*/
-    Read_Options(argc, argv);	/* Read arguments	*/
-    Init_Matrix();		/* Init the matrix	*/
-    find_inverse();
+    // Init_Default();		/* Init default values	*/
+    // Read_Options(argc, argv);	/* Read arguments	*/
+    // Init_Matrix();		/* Init the matrix	*/
+    // find_inverse();
 
-    if (PRINT == 1)
-    {
-        //Print_Matrix(A, "End: Input");
-        Print_Matrix(I, "Inversed");
-    }    
+    // if (PRINT == 1)
+    // {
+    //     //Print_Matrix(A, "End: Input");
+    //     Print_Matrix(I, "Inversed");
+    // }    
 }
 
-void find_inverse(void* thread_id)
+void find_inverse()
 {
-    unsigned long id = (unsigned long)thread_id;
-    int row, col, p; // 'p' stands for pivot (numbered from 0 to N-1)
-    double pivalue; // pivot value
     /* Bringing the matrix A to the identity form */
-    for (p = 0; p < N; p++) { /* Outer loop */
-        pivalue = A[p][p];
-        for (col = 0; col < N; col++)
-        {
-            A[p][col] = A[p][col] / pivalue; /* Division step on A */
-            I[p][col] = I[p][col] / pivalue; /* Division step on I */
-        }
-        assert(A[p][p] == 1.0);
+    children = malloc(N * sizeof(pthread_t));
+    int nThreads = N; // Number of threads to be created
+    pthread_barrier_init(&barrier, NULL, 1); // Initialize barrier (mutex)
 
-        double multiplier;
-        for (row = 0; row < N; row++) {
-            multiplier = A[row][p];
-            if (row != p) // Perform elimination on all except the current pivot row 
+    for (int id = 0; id < nThreads; id++) { /* Outer loop */
+        pthread_barrier_wait(&barrier); // Lock 
+        pthread_create(&(children[id]), NULL, help_inverse, (void*)id); // Let current thread perform its inversion
+        pthread_join(children[id], NULL); // Collect/join result from the threads
+        pthread_barrier_destroy(&barrier); // Unlock
+    }
+    // for(int i = 0; i < nThreads; i){
+
+    // }
+    free(children);
+}
+
+void* help_inverse(void* id)
+{
+    int row, col, p, start, end; // 'p' stands for pivot (numbered from 0 to N-1)
+    // int thread = N%8;
+    // int threadDiv = N/thread;
+    unsigned long thread_id = (unsigned long)id;
+    p = (int)thread_id;
+    printf("P: %d", p);
+    double pivalue; // pivot value
+
+    pivalue = A[p][p];
+    for (col = 0; col < N; col++)
+    {
+        A[p][col] = A[p][col] / pivalue; /* Division step on A */
+        I[p][col] = I[p][col] / pivalue; /* Division step on I */
+
+    }
+
+    assert(A[p][p] == 1.0);
+    // pthread_barrier_destroy(&barrier);
+    double multiplier;
+    for (row = 0; row < N; row++) 
+    {
+        // pthread_barrier_wait(&barrier);
+        multiplier = A[row][p];
+        // pthread_barrier_destroy(&barrier);
+        if (row != p) // Perform elimination on all except the current pivot row 
+        {
+            for (col = 0; col < N; col++)
             {
-                for (col = 0; col < N; col++)
-                {
-                    A[row][col] = A[row][col] - A[p][col] * multiplier; /* Elimination step on A */
-                    I[row][col] = I[row][col] - I[p][col] * multiplier; /* Elimination step on I */
-                }      
-                assert(A[row][p] == 0.0);
+                A[row][col] = A[row][col] - A[p][col] * multiplier; /* Elimination step on A */
+                I[row][col] = I[row][col] - I[p][col] * multiplier; /* Elimination step on I */
             }
+            assert(A[row][p] == 0.0);
+
         }
     }
 }
 
-void
-Init_Matrix()
+
+void*
+Init_Matrix(void* buf)
 {
     int row, col;
-
+    // pthread_mutex_lock(&mutex);
     // Set the diagonal elements of the inverse matrix to 1.0
     // So that you get an identity matrix to begin with
     for (row = 0; row < N; row++) {
@@ -128,6 +155,7 @@ Init_Matrix()
             }
         }
     }
+    // pthread_mutex_unlock(&mutex);
 
     printf("done \n\n");
     if (PRINT == 1)
