@@ -18,6 +18,12 @@ matrix	A;		/* matrix A		*/
 pthread_t *children;
 pthread_barrier_t barrier;
 
+// Th = Thread holder, keeps track of thread id and iteration
+struct Th {
+    int p;
+    int i;
+};
+
 void find_inverse();
 void* Init_Matrix(void* buf);
 void Print_Matrix(matrix M, char name[]);
