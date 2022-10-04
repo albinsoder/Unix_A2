@@ -64,25 +64,43 @@ void find_inverse()
     int nThreads = 8; // Number of threads to be created
     pthread_barrier_init(&barrier, NULL, nThreads); // Initialize barrier
     // Initialize lock as a mutex
-    // if(N < nThreads){
-    //     nThreads=N;
-    // }
+    int check = N;
+    int count = 0;
+    int flag = 0;
+    if(N < nThreads){
+        nThreads=N;
+    }
+    else if(N % 8 != 0){
+        for(int i=0; i<N; i++){
+            check = check-8;
+            count++;
+            if(check < 8){
+                flag = 1;
+                break;
+            }
+        }
+    }
 
+    printf("count: %d", N);
     struct Th *ptr;
-
+    double pi;
     for(int i=0; i<N; i++){
+        pi = A[i][i];
         for (int id = 0; id < nThreads; id++) { /* Outer loop */
             ptr = (struct Th*)malloc(sizeof(struct Th));
+            ptr->pivalue=pi;
             ptr->p = i;
             ptr->i = id;
+            // printf("P: %f \n", ptr->pivalue);
             pthread_create(&(children[id]), NULL, help_inverse, ptr); // Let current thread perform its inversion
-            free(ptr);
+
         }
         for (int id = 0; id < nThreads; id++) { /* Outer loop */
             pthread_join(children[id], NULL); // Collect/join result from the threads
         }
         pthread_barrier_destroy(&barrier);
     }
+    free(ptr);
     // for(int i = 0; i < nThreads; i){
 
     // }
@@ -94,38 +112,33 @@ void* help_inverse(void* id)
 {
     int row, col, start, end, thread_div, n_thread; // 'p' stands for pivot (numbered from 0 to N-1)
 
-    struct Th *t_holder = id;
+    struct Th *t_holder = (struct Th*)id;
 
     thread_div = N/8;
     start = t_holder->i*thread_div;
     end = (t_holder->i+1)*thread_div;
-    // printf("START: %d \n", start);
-    // printf("END: %d \n", end);
-    printf("P: %d \n", t_holder->p);
 
-    double pivalue; // pivot value
-    pivalue = A[t_holder->p][t_holder->p];
     for (col = start; col < end; col++)
     {
-        A[t_holder->p][col] = A[t_holder->p][col] / pivalue; /* Division step on A */
-        I[t_holder->p][col] = I[t_holder->p][col] / pivalue; /* Division step on I */
+        A[t_holder->p][col] = A[t_holder->p][col] / t_holder->pivalue; /* Division step on A */
+        I[t_holder->p][col] = I[t_holder->p][col] / t_holder->pivalue; /* Division step on I */
 
     }
-    // printf("A: %f, p: %d \n", A[t_holder->p][t_holder->p], t_holder->p);
     pthread_barrier_wait(&barrier);
     assert(A[t_holder->p][t_holder->p] == 1.0);
     double multiplier;
     for (row = start; row < end; row++) 
     {
         multiplier = A[row][t_holder->p];
+        // pthread_barrier_wait(&barrier);
         if (row != t_holder->p) // Perform elimination on all except the current pivot row 
         {
-            for (col = start; col < end; col++)
+            for (col = 0; col < N; col++)
             {
                 A[row][col] = A[row][col] - A[t_holder->p][col] * multiplier; /* Elimination step on A */
                 I[row][col] = I[row][col] - I[t_holder->p][col] * multiplier; /* Elimination step on I */
             }
-            // assert(A[row][t_holder->p] == 0.0);
+            assert(A[row][t_holder->p] == 0.0);
         }
     }
     
@@ -151,7 +164,7 @@ Init_Matrix(void* buf)
     printf("Init	  = %s \n", Init);
     printf("Initializing matrix...");
 
-    if (strncmp(Init, "rand", 4)) {
+    if (Init[0] == 'r') {
         for (row = 0; row < N; row++) {
             for (col = 0; col < N; col++) {
                 if (row == col) /* diagonal dominance */
@@ -162,7 +175,7 @@ Init_Matrix(void* buf)
         }
     }
     // printf("LENGTH: %ld", strlen(Init));
-    if (strncmp(Init, "fast", 4)) {
+    if (Init[0] == 'f') {
         for (row = 0; row < N; row++) {
             for (col = 0; col < N; col++) {
                 if (row == col) /* diagonal dominance */
@@ -177,8 +190,8 @@ Init_Matrix(void* buf)
     printf("done \n\n");
     if (PRINT == 1)
     {
-        //Print_Matrix(A, "Begin: Input");
-        //Print_Matrix(I, "Begin: Inverse");
+        Print_Matrix(A, "Begin: Input");
+        // Print_Matrix(I, "Begin: Inverse");
     }
 }
 

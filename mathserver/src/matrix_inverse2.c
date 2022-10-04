@@ -55,6 +55,7 @@ void find_inverse()
         pivalue = A[p][p];
         for (col = 0; col < N; col++)
         {
+            // printf("THOLDER: %d COL: %d PIVALUE: %f \n", p, col, pivalue);
             A[p][col] = A[p][col] / pivalue; /* Division step on A */
             I[p][col] = I[p][col] / pivalue; /* Division step on I */
         }
@@ -119,7 +120,7 @@ Init_Matrix()
     printf("done \n\n");
     if (PRINT == 1)
     {
-        //Print_Matrix(A, "Begin: Input");
+        Print_Matrix(A, "Begin: Input");
         //Print_Matrix(I, "Begin: Inverse");
     }
 }
