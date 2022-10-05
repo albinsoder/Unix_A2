@@ -23,6 +23,7 @@ struct Th {
     int p;
     int i;
     int size;
+    int end;
     double pivalue;
 };
 
