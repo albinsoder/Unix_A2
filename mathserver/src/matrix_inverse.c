@@ -63,7 +63,7 @@ void find_inverse()
     children = malloc(N * sizeof(pthread_t));
     int nThreads = 8; // Number of threads to be created
     int rest=0;
-    int count = 0;
+    int factor = 0;
     int flag = 0;
     if(N < nThreads){
         nThreads=N;
@@ -72,30 +72,31 @@ void find_inverse()
     else if(N % 8 != 0){
         rest = N%8;
         flag=1;
+        factor = (N-rest)/8;
     }
 
     pthread_barrier_init(&barrier, NULL, nThreads); // Initialize barrier
-    struct Th *ptr;
+    struct Th *t_info;
     int n = (N-rest);
     double pi;
     for(int i=0; i<N; i++){
         pi = A[i][i];
         for (int id = 0; id < nThreads; id++) { /* Outer loop */
             if(flag && id == nThreads-1){
-                ptr = (struct Th*)malloc(sizeof(struct Th));
-                ptr->size=-1; //functions as a flag
-                ptr->pivalue=pi;
-                ptr->p = i;
-                ptr->i = id;
-                ptr->end = N;
-                pthread_create(&(children[id]), NULL, help_inverse, ptr); // Let current thread perform its inversion
+                t_info = (struct Th*)malloc(sizeof(struct Th));
+                t_info->size=-1; //functions as a flag
+                t_info->pivalue=pi;
+                t_info->p = i;
+                t_info->i = id*factor;
+                t_info->end = N;
+                pthread_create(&(children[id]), NULL, help_inverse, t_info); // Let current thread perform its inversion
             } else{
-                ptr = (struct Th*)malloc(sizeof(struct Th));
-                ptr->size=n;
-                ptr->pivalue=pi;
-                ptr->p = i;
-                ptr->i = id;
-                pthread_create(&(children[id]), NULL, help_inverse, ptr); // Let current thread perform its inversion
+                t_info = (struct Th*)malloc(sizeof(struct Th));
+                t_info->size=n;
+                t_info->pivalue=pi;
+                t_info->p = i;
+                t_info->i = id;
+                pthread_create(&(children[id]), NULL, help_inverse, t_info); // Let current thread perform its inversion
             }
         }
         for (int id = 0; id < nThreads+1; id++) { /* Outer loop */
@@ -103,53 +104,53 @@ void find_inverse()
         }
         pthread_barrier_destroy(&barrier);
     }
-    free(ptr);
+    free(t_info);
     free(children);
 }
 
 void* help_inverse(void* id)
 {
-    int row, col, start, end, thread_div, n_thread; // 'p' stands for pivot (numbered from 0 to N-1)
+    int row, col, start, end, thread_div, n_thread, size_n; // 'p' stands for pivot (numbered from 0 to N-1)
 
-    struct Th *t_holder = (struct Th*)id;
+    struct Th *t_info = (struct Th*)id;
 
-    int sizeN= (int)t_holder->size;
-    if(sizeN == -1){
-        start = t_holder->i;
-        end = t_holder->end;
+    size_n= (int)t_info->size;
+    if(size_n == -1){
+        start = t_info->i;
+        end = t_info->end;
     }
-    else if(sizeN < 8){
+    else if(size_n < 8){
         thread_div=1;
-        start = t_holder->i*thread_div;
-        end = (t_holder->i+1)*thread_div;
+        start = t_info->i*thread_div;
+        end = (t_info->i+1)*thread_div;
         // printf("SIZE: %d", sizeN);
     } else{
-        thread_div = sizeN/8;
-        start = t_holder->i*thread_div;
-        end = (t_holder->i+1)*thread_div;
+        thread_div = size_n/8;
+        start = t_info->i*thread_div;
+        end = (t_info->i+1)*thread_div;
     }
 
     for (col = start; col < end; col++)
     {
-        A[t_holder->p][col] = A[t_holder->p][col] / t_holder->pivalue; /* Division step on A */
-        I[t_holder->p][col] = I[t_holder->p][col] / t_holder->pivalue; /* Division step on I */
+        A[t_info->p][col] = A[t_info->p][col] / t_info->pivalue; /* Division step on A */
+        I[t_info->p][col] = I[t_info->p][col] / t_info->pivalue; /* Division step on I */
 
     }
     pthread_barrier_wait(&barrier);
-    assert(A[t_holder->p][t_holder->p] == 1.0);
+    assert(A[t_info->p][t_info->p] == 1.0);
     double multiplier;
 
     for (row = start; row < end; row++) 
     {
-        multiplier = A[row][t_holder->p];
-        if (row != t_holder->p) // Perform elimination on all except the current pivot row 
+        multiplier = A[row][t_info->p];
+        if (row != t_info->p) // Perform elimination on all except the current pivot row 
         {
             for (col = 0; col < N; col++)
             {
-                A[row][col] = A[row][col] - A[t_holder->p][col] * multiplier; /* Elimination step on A */
-                I[row][col] = I[row][col] - I[t_holder->p][col] * multiplier; /* Elimination step on I */
+                A[row][col] = A[row][col] - A[t_info->p][col] * multiplier; /* Elimination step on A */
+                I[row][col] = I[row][col] - I[t_info->p][col] * multiplier; /* Elimination step on I */
             }
-            assert(A[row][t_holder->p] == 0.0);
+            assert(A[row][t_info->p] == 0.0);
         }
     }
     
