@@ -30,7 +30,7 @@ main(int argc, char** argv)
 
     if (PRINT == 1)
     {
-        Print_Matrix(A, "End: Input");
+        // Print_Matrix(A, "End: Input");
         Print_Matrix(I, "Inversed");
     }
 }
@@ -59,14 +59,13 @@ start_mat(int argc, char** argv){
 
 void find_inverse()
 {
-    /* Bringing the matrix A to the identity form */
     children = malloc(N * sizeof(pthread_t));
-    int nThreads = 8; // Number of threads to be created
+    int n_threads = 8; // Number of threads to be created
     int rest=0;
     int factor = 0;
     int flag = 0;
-    if(N < nThreads){
-        nThreads=N;
+    if(N < n_threads){
+        n_threads=N;
         rest = 0;
     }
     else if(N % 8 != 0){
@@ -75,32 +74,32 @@ void find_inverse()
         factor = (N-rest)/8;
     }
 
-    pthread_barrier_init(&barrier, NULL, nThreads); // Initialize barrier
+    pthread_barrier_init(&barrier, NULL, n_threads);                          // Initialize barrier
     struct Th *t_info;
-    int n = (N-rest);
+    int n_mod8 = (N-rest);
     double pi;
     for(int i=0; i<N; i++){
         pi = A[i][i];
-        for (int id = 0; id < nThreads; id++) { /* Outer loop */
-            if(flag && id == nThreads-1){
-                t_info = (struct Th*)malloc(sizeof(struct Th));
-                t_info->size=-1; //functions as a flag
-                t_info->pivalue=pi;
-                t_info->p = i;
-                t_info->i = id*factor;
-                t_info->end = N;
+        for (int id = 0; id < n_threads; id++) {                              /* Outer loop */
+            if(flag && id == n_threads-1){
+                t_info = (struct Th*)malloc(sizeof(struct Th));              //if N%8!=0 then we give last thread more workload
+                t_info->size=-1;                                             //functions as a flag
+                t_info->pivalue=pi;                                          //pivalue
+                t_info->p = i;                                               //i=outer loop iteration
+                t_info->i = id*factor;                                       //factor =
+                t_info->end = N;                                             //where we stop
                 pthread_create(&(children[id]), NULL, help_inverse, t_info); // Let current thread perform its inversion
             } else{
                 t_info = (struct Th*)malloc(sizeof(struct Th));
-                t_info->size=n;
+                t_info->size=n_mod8;
                 t_info->pivalue=pi;
                 t_info->p = i;
                 t_info->i = id;
                 pthread_create(&(children[id]), NULL, help_inverse, t_info); // Let current thread perform its inversion
             }
         }
-        for (int id = 0; id < nThreads+1; id++) { /* Outer loop */
-            pthread_join(children[id], NULL); // Collect/join result from the threads
+        for (int id = 0; id < n_threads; id++) {
+            pthread_join(children[id], NULL);                                 // Collect/join result from the threads
         }
         pthread_barrier_destroy(&barrier);
     }
@@ -201,7 +200,7 @@ Init_Matrix(void* buf)
     printf("done \n\n");
     if (PRINT == 1)
     {
-        Print_Matrix(A, "Begin: Input");
+        // Print_Matrix(A, "Begin: Input");
         // Print_Matrix(I, "Begin: Inverse");
     }
 }

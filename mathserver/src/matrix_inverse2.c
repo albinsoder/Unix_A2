@@ -40,7 +40,7 @@ main(int argc, char** argv)
 
     if (PRINT == 1)
     {
-        Print_Matrix(A, "End: Input");
+        // Print_Matrix(A, "End: Input");
         Print_Matrix(I, "Inversed");
     }
 }
@@ -120,7 +120,7 @@ Init_Matrix()
     printf("done \n\n");
     if (PRINT == 1)
     {
-        Print_Matrix(A, "Begin: Input");
+        // Print_Matrix(A, "Begin: Input");
         //Print_Matrix(I, "Begin: Inverse");
     }
 }
