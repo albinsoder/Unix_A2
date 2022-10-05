@@ -37,10 +37,9 @@ int main(int argc, char *argv[]) {
     }
     // printf("%s \n", ip[0]);
     // printf("%i", port);
-    initialize(port,*ip);
-    connectToServer(1);
-    clientInterface();
+    initialize(port,*ip); // Start the server with provided port and IP
+    connectToServer(1); // Establish a TCP connection
+    clientInterface(); // Interface where the client sends and recieves commands/data
 
-    // printf("Köp mer SBB grabbar, TOO THE MOON!");
     return 0;
 }

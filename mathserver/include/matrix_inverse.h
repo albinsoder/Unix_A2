@@ -22,6 +22,7 @@ pthread_barrier_t barrier;
 struct Th {
     int p;
     int i;
+    int size;
     double pivalue;
 };
 

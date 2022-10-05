@@ -62,36 +62,44 @@ void find_inverse()
     /* Bringing the matrix A to the identity form */
     children = malloc(N * sizeof(pthread_t));
     int nThreads = 8; // Number of threads to be created
-    pthread_barrier_init(&barrier, NULL, nThreads); // Initialize barrier
-    // Initialize lock as a mutex
-    int check = N;
+    int rest = N;
     int count = 0;
     int flag = 0;
     if(N < nThreads){
         nThreads=N;
+        rest = 0;
     }
     else if(N % 8 != 0){
         for(int i=0; i<N; i++){
-            check = check-8;
+            rest = rest-8;
             count++;
-            if(check < 8){
+            if(rest < 8){
                 flag = 1;
                 break;
             }
         }
+    }else {
+        rest=0;
     }
 
-    printf("count: %d", N);
+    // printf("count: %d \n", rest);
+    int n = (N-rest);
     struct Th *ptr;
     double pi;
-    for(int i=0; i<N; i++){
+    int check_n;
+    for(int i=0; i<N-rest; i++){
         pi = A[i][i];
+        // out_index=i;
+        // printf("FÖRSTA LOOP %d \n:", i);
+        pthread_barrier_init(&barrier, NULL, nThreads); // Initialize barrier
         for (int id = 0; id < nThreads; id++) { /* Outer loop */
+            // printf("N: %d \n", N);
             ptr = (struct Th*)malloc(sizeof(struct Th));
+            ptr->size=n;
             ptr->pivalue=pi;
             ptr->p = i;
             ptr->i = id;
-            // printf("P: %f \n", ptr->pivalue);
+            // printf("FIRST I: %d",i);
             pthread_create(&(children[id]), NULL, help_inverse, ptr); // Let current thread perform its inversion
 
         }
@@ -99,12 +107,50 @@ void find_inverse()
             pthread_join(children[id], NULL); // Collect/join result from the threads
         }
         pthread_barrier_destroy(&barrier);
+
+        if(flag){
+            pthread_barrier_init(&barrier, NULL, rest); // Initialize barrier
+            for(int id =N-rest; id < N; id++){
+                ptr = (struct Th*)malloc(sizeof(struct Th));
+                ptr->size=rest;
+                ptr->pivalue=pi;
+                ptr->p = i;
+                ptr->i = id;
+                pthread_create(&(children[id]), NULL, help_inverse, ptr); // Let current thread perform its inversion
+            }
+            for (int id = N-rest; id < N; id++) { /* Outer loop */
+                pthread_join(children[id], NULL); // Collect/join result from the threads
+            }
+            pthread_barrier_destroy(&barrier);
+
+        }
+
+    }
+
+    if(flag == 1){
+        // pthread_barrier_destroy(&barrier);
+        pthread_barrier_init(&barrier, NULL, rest); // Initialize barrier
+        int new_n = N-rest;
+        for(int i=new_n; i<new_n+rest; i++){
+            pi = A[i][i];
+            for (int id = 0; id < rest; id++) { /* Outer loop */
+                ptr = (struct Th*)malloc(sizeof(struct Th));
+                ptr->size = rest;
+                ptr->pivalue=pi;
+                ptr->p = i;
+                ptr->i = id+i;
+                pthread_create(&(children[id]), NULL, help_inverse, ptr); // Let current thread perform its inversion
+
+            }
+            for (int id = 0; id < rest; id++) { /* Outer loop */
+                pthread_join(children[id], NULL); // Collect/join result from the threads
+            }
+            pthread_barrier_destroy(&barrier);
+
+        }
+        
     }
     free(ptr);
-    // for(int i = 0; i < nThreads; i){
-
-    // }
-    // free(ptr);
     free(children);
 }
 
@@ -114,10 +160,23 @@ void* help_inverse(void* id)
 
     struct Th *t_holder = (struct Th*)id;
 
-    thread_div = N/8;
-    start = t_holder->i*thread_div;
-    end = (t_holder->i+1)*thread_div;
+    int sizeN= (int)t_holder->size;
+    if(sizeN < 8){
+        thread_div=1;
+        start = t_holder->i*thread_div;
+        end = (t_holder->i+1)*thread_div;
+        printf("SIZE: %d", sizeN);
+    } else{
+        thread_div = sizeN/8;
+        start = t_holder->i*thread_div;
+        end = (t_holder->i+1)*thread_div;
+    }
+    // printf(("SIZE: %d \n", sizeN));
+    // printf("THREAD: %d", thread_div);
 
+    // printf("START: %d\n", t_holder->p);
+    printf("START: %d \n", start);
+    printf("END: %d \n", end);
     for (col = start; col < end; col++)
     {
         A[t_holder->p][col] = A[t_holder->p][col] / t_holder->pivalue; /* Division step on A */
