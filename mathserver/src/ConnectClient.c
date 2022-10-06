@@ -56,9 +56,30 @@ void clientInterface(){
         fflush(stdin);
         // recv() receives the message
         // from server and stores in buffer
-        recv(clientSocket, buffer, 1024, 0);
-        puts(buffer);
-        bzero(buffer, sizeof(buffer));
+        FILE* fp;
+        int size = 4096;
+        char* data = malloc(size);
+
+        fp = fopen("../../computed_results/matrix_result.txt", "w");
+        int n;
+
+        while(1){
+            n = recv(clientSocket, data, size, 0);
+            printf("%s \n", data);
+            printf("N: %d \n", n);
+            if (n == 1)
+            {   
+                printf("KLARA NU DED\n");
+                break;
+            }
+            fprintf(fp, "%s", data);
+            bzero(data, size);
+        }
+        fclose(fp);
+        free(data);
+        printf("DONE \n");
+        // puts(buffer);
+        // bzero(buffer, sizeof(buffer));
         // Printing the message on screen
     }
     close(clientSocket);

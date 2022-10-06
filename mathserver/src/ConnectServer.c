@@ -66,9 +66,10 @@ void serverInterface(){
         if ((childpid = fork()) == 0) {
             // Closing the server socket id
             close(sockfd);
-            send(clientSocket, "hi client",
-                strlen("hi client"), 0);
+            send(clientSocket, "Hello client!",
+                strlen("Hello client!"), 0);
             while(connected){
+                printf("REDO FÖR NÄSTA \n");
                 int res = recv(clientSocket, buffer, 1024, 0);
                 if(res == 0){
                     close(clientSocket);
@@ -82,15 +83,57 @@ void serverInterface(){
                 if (commandRes == -1)
                 {
                     send(clientSocket, "Faulty input, please input new command!",40, 0);
-                } 
+                }else{
+                    if(buffer[0] == 'm'){
+                        int size = 4096;
+                        char* data = malloc(size);
+                        FILE* f;
+                        f = fopen("matrix.txt", "r");
+                        while(fgets(data, size, f) != NULL){
+                            printf("%s \n", data);
+                            if(send(clientSocket, data, size, 0) == -1){
+                                perror("Sending data failed");
+                                exit(1);
+                            }
+                            bzero(data, size);
+                        }
+                        fclose(f);
+                        // send(clientSocket, fp,sizeof(fp), 0);
+                        free(data);
+                        free(buffer);
+                        send(clientSocket, "", 1, 0); // Data transmission completed
+                        if (remove("matrix.txt") == 0){ // Remove file after sending the data to the client
+                            printf("Solution file deleted successfully!\n");
+                        } else {
+                            printf("Failed to delete solution file!\n");
+                        }
+                    }
+                    else{
+                        int size = 4096;
+                        char* data = malloc(size);
+                        FILE* f;
+                        f = fopen("kmeans-results.txt", "r");
+                        while(fgets(data, size, f) != NULL){
+                            printf("%s \n", data);
+                            if(send(clientSocket, data, size, 0) == -1){
+                                perror("Sending data failed");
+                                exit(1);
+                            }
+                            bzero(data, size);
+                        }
+                        fclose(f);
+                        // send(clientSocket, fp,sizeof(fp), 0);
+                        free(data);
+                        free(buffer);
+                        send(clientSocket, "", 1, 0); // Data transmission completed
+                        if (remove("kmeans-results.txt") == 0){ // Remove file after sending the data to the client
+                            printf("Solution file deleted successfully!\n");
+                        } else {
+                            printf("Failed to delete solution file!\n");
+                        }
+                    }
+                }
                 commandRes = 0;
-                free(buffer);
-                // free(copyBuffer);
-                // bzero(buffer, sizeof(buffer));
-                // bzero(copyBuffer, sizeof(buffer));
-                // bzero(buffer, sizeof(buffer));
-
-                send(clientSocket, "Sending solution: ",strlen("Sending solution:"), 0);
             }
         }
     }
@@ -101,13 +144,13 @@ void serverInterface(){
 
 int readBuffer(char* buff){
 
-    if(buff[0] == 'k'){
+    if(buff[0] == 'k'){ // Kmeans is to be run
         printf("kmeans \n");
         start_kmeans();
         return 0;
 
     }
-    else if(buff[0] == 'm'){
+    else if(buff[0] == 'm'){ // Matinv is to be run
         // printf("matinv \n");
         char** tmpBuff = (char**)malloc(1024);
         char* newBuff = malloc(1024);
@@ -122,6 +165,7 @@ int readBuffer(char* buff){
             if(buff[i] == '\0'){
                 tmpBuff[len] = (char*)malloc(strlen(newBuff)+1);
                 strcpy(tmpBuff[len], newBuff);
+                len++;
                 free(newBuff);
                 break;
             }
@@ -138,10 +182,14 @@ int readBuffer(char* buff){
                 
         }
         start_mat(countArg, tmpBuff);
+        // for(int i=0; i<1024; i++){
+        //     free(tmpBuff[i]);
+        // }
+        // free(tmpBuff);
+        // free(newBuff);
         return 0;
     }
-    else {
-        printf("Faulty input");
+    else { // Faulty command provided
         return -1;
     }
     return 0;

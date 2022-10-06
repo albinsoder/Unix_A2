@@ -17,6 +17,7 @@ int	PRINT;		/* print switch		*/
 matrix	A;		/* matrix A		*/
 pthread_t *children;
 pthread_barrier_t barrier;
+FILE *fp;
 
 // Th = Thread holder, keeps track of thread id and iteration
 struct Th {
@@ -28,12 +29,12 @@ struct Th {
 };
 
 void find_inverse();
-void* Init_Matrix(void* buf);
+void Init_Matrix(void);
 void Print_Matrix(matrix M, char name[]);
+void Write_To_File(matrix M); // Write matrix M to file matrix.txt
 void Init_Default(void);
 int Read_Options(int, char**);
-int start_mat (int, char**);
+int start_mat (int, char**); 
 void* help_inverse(void* id);
-void* child(void* buf);
 
 #endif

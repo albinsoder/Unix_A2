@@ -9,52 +9,50 @@
 
 /* forward declarations */
 
-matrix I = {0.0};
+// I = {0.0};
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 
+// int
+// main(int argc, char** argv)
+// {
+//     printf("Matrix Inverse\n");
+//     int i, timestart, timeend, iter;
+
+//     Init_Default();		/* Init default values	*/
+//     Read_Options(argc, argv);	/* Read arguments	*/
+//     Init_Matrix();
+//     // Init_Matrix(NULL);
+//     find_inverse();
+//     // Init_Matrix();		/* Init the matrix	*/
+//     // find_inverse();
+
+//     // if (PRINT == 1)
+//     // {
+//     //     // Print_Matrix(A, "End: Input");
+//     //     Print_Matrix(I, "Inversed");
+//     // }
+// }
+
+matrix I = {0.0};
+
+// Main function to call when performing matrix inversion
 int
-main(int argc, char** argv)
-{
+start_mat(int argc, char** argv){
     printf("Matrix Inverse\n");
     int i, timestart, timeend, iter;
-    unsigned long id=0;
 
     Init_Default();		/* Init default values	*/
     Read_Options(argc, argv);	/* Read arguments	*/
-    Init_Matrix((void*)id);
-    // Init_Matrix(NULL);
+    Init_Matrix();		/* Init the matrix	*/
     find_inverse();
-    // Init_Matrix();		/* Init the matrix	*/
-    // find_inverse();
 
     if (PRINT == 1)
     {
-        // Print_Matrix(A, "End: Input");
+        //Print_Matrix(A, "End: Input");
         Print_Matrix(I, "Inversed");
-    }
-}
-void* child(void* buf){
-    unsigned long childID = (unsigned long)buf;
-    find_inverse(childID);
-    return NULL;
-}
-
-int
-start_mat(int argc, char** argv){
-    // printf("Matrix Inverse\n");
-    // int i, timestart, timeend, iter;
-
-    // Init_Default();		/* Init default values	*/
-    // Read_Options(argc, argv);	/* Read arguments	*/
-    // Init_Matrix();		/* Init the matrix	*/
-    // find_inverse();
-
-    // if (PRINT == 1)
-    // {
-    //     //Print_Matrix(A, "End: Input");
-    //     Print_Matrix(I, "Inversed");
-    // }    
+        Write_To_File(I);
+    }    
 }
 
 void find_inverse()
@@ -68,10 +66,10 @@ void find_inverse()
         n_threads=N;
         rest = 0;
     }
-    else if(N % 8 != 0){
-        rest = N%8;
+    else if(N % n_threads != 0){
+        rest = N%n_threads;
         flag=1;
-        factor = (N-rest)/8;
+        factor = (N-rest)/n_threads;
     }
 
     pthread_barrier_init(&barrier, NULL, n_threads);                          // Initialize barrier
@@ -114,7 +112,7 @@ void* help_inverse(void* id)
     struct Th *t_info = (struct Th*)id;
 
     size_n= (int)t_info->size;
-    if(size_n == -1){
+    if(size_n == -1){                                        //if size = -1, this indicates its last thread with extra work
         start = t_info->i;
         end = t_info->end;
     }
@@ -155,8 +153,8 @@ void* help_inverse(void* id)
     
 }
 
-void*
-Init_Matrix(void* buf)
+void
+Init_Matrix()
 {
     int row, col;
     // pthread_mutex_lock(&mutex);
@@ -217,6 +215,19 @@ Print_Matrix(matrix M, char name[])
         printf("\n");
     }
     printf("\n\n");
+}
+
+void
+Write_To_File(matrix M)
+{
+    fp = fopen("matrix.txt", "w");
+    int row, col;
+    for (row = 0; row < N; row++) {
+        for (col = 0; col < N; col++)
+            fprintf(fp, " %5.2f", M[row][col]);
+        fprintf(fp, "\n");
+    }
+    fclose(fp);
 }
 
 void
