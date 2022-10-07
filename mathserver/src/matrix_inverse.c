@@ -12,33 +12,32 @@
 // I = {0.0};
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
+matrix I = {0.0};
 
 // int
 // main(int argc, char** argv)
 // {
 //     printf("Matrix Inverse\n");
 //     int i, timestart, timeend, iter;
+//     int processId = 2;
 
 //     Init_Default();		/* Init default values	*/
 //     Read_Options(argc, argv);	/* Read arguments	*/
-//     Init_Matrix();
-//     // Init_Matrix(NULL);
+//     Init_Matrix();		/* Init the matrix	*/
 //     find_inverse();
-//     // Init_Matrix();		/* Init the matrix	*/
-//     // find_inverse();
 
-//     // if (PRINT == 1)
-//     // {
-//     //     // Print_Matrix(A, "End: Input");
-//     //     Print_Matrix(I, "Inversed");
-//     // }
+//     if (PRINT == 1)
+//     {
+//         //Print_Matrix(A, "End: Input");
+//         Print_Matrix(I, "Inversed");
+//         Write_To_File(I, processId);
+//     }
 // }
 
-matrix I = {0.0};
 
 // Main function to call when performing matrix inversion
 int
-start_mat(int argc, char** argv){
+start_mat(int argc, char** argv, int processId){
     printf("Matrix Inverse\n");
     int i, timestart, timeend, iter;
 
@@ -51,7 +50,7 @@ start_mat(int argc, char** argv){
     {
         //Print_Matrix(A, "End: Input");
         Print_Matrix(I, "Inversed");
-        Write_To_File(I);
+        Write_To_File(I, processId);
     }    
 }
 
@@ -218,9 +217,13 @@ Print_Matrix(matrix M, char name[])
 }
 
 void
-Write_To_File(matrix M)
+Write_To_File(matrix M, int processID)
 {
-    fp = fopen("matrix.txt", "w");
+    int pID = processID;
+    char path[70];
+    sprintf(path,"../../computed_results/server_results/matinv_client%d_sol.txt",pID);
+    printf("PATH: %s \n", path);
+    fp = fopen(path, "w");
     int row, col;
     for (row = 0; row < N; row++) {
         for (col = 0; col < N; col++)

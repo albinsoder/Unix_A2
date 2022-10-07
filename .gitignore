@@ -5,3 +5,9 @@ mathserver/src/server
 mathserver/src/matinv
 mathserver/include/matrix_inverse.h.gch
 mathserver/src/sr
+mathserver/src/kmean
+mathserver/src/kmean2
+mathserver/src/kmeans-results.txt
+mathserver/src/kmeans-results.txt
+mathserver/src/kmeans-results2.txt
+mathserver/src/kmeans-results.txt

@@ -85,10 +85,14 @@ void serverInterface(){
                     send(clientSocket, "Faulty input, please input new command!",40, 0);
                 }else{
                     if(buffer[0] == 'm'){
+                        int pID = cnt; // Clients ID
+                        char path[70];
+                        sprintf(path,"../../computed_results/server_results/matinv_client%d_sol.txt",pID);
+                        printf("PATH: %s \n" , path);
                         int size = 4096;
                         char* data = malloc(size);
                         FILE* f;
-                        f = fopen("matrix.txt", "r");
+                        f = fopen(path, "r");
                         while(fgets(data, size, f) != NULL){
                             printf("%s \n", data);
                             if(send(clientSocket, data, size, 0) == -1){
@@ -102,11 +106,11 @@ void serverInterface(){
                         free(data);
                         free(buffer);
                         send(clientSocket, "", 1, 0); // Data transmission completed
-                        if (remove("matrix.txt") == 0){ // Remove file after sending the data to the client
-                            printf("Solution file deleted successfully!\n");
-                        } else {
-                            printf("Failed to delete solution file!\n");
-                        }
+                        // if (remove(path) == 0){ // Remove file after sending the data to the client
+                        //     printf("Solution file deleted successfully!\n");
+                        // } else {
+                        //     printf("Failed to delete solution file!\n");
+                        // }
                     }
                     else{
                         int size = 4096;
@@ -137,7 +141,6 @@ void serverInterface(){
             }
         }
     }
- 
     // Close the client socket id
     close(clientSocket);
 }
@@ -146,7 +149,7 @@ int readBuffer(char* buff){
 
     if(buff[0] == 'k'){ // Kmeans is to be run
         printf("kmeans \n");
-        start_kmeans();
+        // start_kmeans();
         return 0;
 
     }
@@ -181,16 +184,38 @@ int readBuffer(char* buff){
             }
                 
         }
-        start_mat(countArg, tmpBuff);
-        // for(int i=0; i<1024; i++){
-        //     free(tmpBuff[i]);
-        // }
-        // free(tmpBuff);
-        // free(newBuff);
+        start_mat(countArg, tmpBuff, cnt);
         return 0;
     }
     else { // Faulty command provided
         return -1;
     }
     return 0;
+}
+
+void sendMatFile(int pID){
+    char path[70];
+    sprintf(path,"../../computed_results/server_results/matinv_client%d_sol.txt",pID);
+    int size = 4096;
+    char* data = malloc(size);
+    FILE* f;
+    f = fopen(path, "r");
+    while(fgets(data, size, f) != NULL){
+        printf("%s \n", data);
+        if(send(clientSocket, data, size, 0) == -1){
+            perror("Sending data failed");
+            exit(1);
+        }
+        bzero(data, size);
+    }
+    fclose(f);
+    // send(clientSocket, fp,sizeof(fp), 0);
+    free(data);
+    free(buffer);
+    send(clientSocket, "", 1, 0); // Data transmission completed
+    if (remove(path) == 0){ // Remove file after sending the data to the client
+        printf("Solution file deleted successfully!\n");
+    } else {
+        printf("Failed to delete solution file!\n");
+    }
 }

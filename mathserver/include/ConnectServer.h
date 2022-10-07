@@ -11,7 +11,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include "matrix_inverse.h"
-#include "kmeans.h"
+// #include "kmeans.h"
 
 // Int setup
 int sockfd, ret, cnt, commandRes;
@@ -41,6 +41,7 @@ void serverInterface();
 // Filter input from client, check if kmeans or matinv is to be run
 // and perform the asked for calculations
 int readBuffer(char* copyBuffer);
-// Count number of arguments found in input from client
+// Send matinv-file to client
+void sendMatFile(int);
 
 #endif

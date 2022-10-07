@@ -30,11 +30,11 @@ struct Th {
 
 void find_inverse();
 void Init_Matrix(void);
-void Print_Matrix(matrix M, char name[]);
-void Write_To_File(matrix M); // Write matrix M to file matrix.txt
+void Print_Matrix(matrix, char name[]);
+void Write_To_File(matrix, int); // Write matrix M to file matrix.txt
 void Init_Default(void);
 int Read_Options(int, char**);
-int start_mat (int, char**); 
-void* help_inverse(void* id);
+int start_mat (int, char**, int); 
+void* help_inverse(void*);
 
 #endif
