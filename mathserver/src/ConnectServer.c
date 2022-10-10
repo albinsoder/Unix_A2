@@ -1,6 +1,17 @@
 #include "../include/ConnectServer.h"
 
 void initialize(int port){
+    struct stat dirCreator = {0};
+    // Create needed directories for input and output data
+    if (stat("../../computed_results", &dirCreator) == -1) {
+        mkdir("../../computed_results", 0777);
+    }
+    if (stat("../../computed_results/server_results", &dirCreator) == -1){
+        mkdir("../../computed_results/server_results", 0777);
+    }
+    if (stat("../../computed_results/server_inputs", &dirCreator) == -1){
+        mkdir("../../computed_results/server_inputs", 0777);
+    }
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
  
@@ -66,8 +77,9 @@ void serverInterface(){
         if ((childpid = fork()) == 0) {
             // Closing the server socket id
             close(sockfd);
-            send(clientSocket, "Hello client!",
-                strlen("Hello client!"), 0);
+            char cntHolder[4];
+            sprintf(cntHolder, "%d", cnt);
+            send(clientSocket, cntHolder, strlen(cntHolder), 0);
             while(connected){
                 printf("REDO FÖR NÄSTA \n");
                 int res = recv(clientSocket, buffer, 1024, 0);
@@ -76,15 +88,53 @@ void serverInterface(){
                     kill(getpid(), SIGKILL);
                     break;
                 }
-                printf("Client: %d commanded:", cnt);
+                printf("Client: %d commanded: ", cnt);
                 puts(buffer);
+                if(buffer[0] =='k'){
+                    printf("KMEANS \n");
+                    int size = 4096;
+                    char* data = malloc(size);
+                    fp = fopen("kmeans-data-server.txt", "w");
+                    int n;
+                    int iteration =0;
+                    while(1){
+                        n = recv(clientSocket, data, size, 0);
+                        iteration++;
+                        // printf("I: %d \n", iteration);
+                        fflush(stdout);
+                        
+                        if (n == 1)
+                        {   
+                            printf("KLARA NU DED\n");
+                            iteration--;
+                            break;
+                        }
+                        fprintf(fp, "%s", data);
+                        bzero(data, size);
+                    }
+                    char* k = malloc(1024);
+                    recv(clientSocket, k, 1024, 0);
+
+                    fclose(fp);
+                    free(data);
+                    printf("DONE \n");
+                    commandRes = readBuffer(buffer,k, iteration, "kmeans-data-server.txt");
+                    if (commandRes == -1)
+                    {
+                        send(clientSocket, "Faulty input, please input new command!",40, 0);
+
+                    }
+                    free(k);
                 // strncpy(copyBuffer, buffer, sizeof(buffer));
-                commandRes = readBuffer(buffer);
-                if (commandRes == -1)
-                {
-                    send(clientSocket, "Faulty input, please input new command!",40, 0);
-                }else{
+                }
+                else{
                     if(buffer[0] == 'm'){
+                        commandRes = readBuffer(buffer, 0, 0, 0);
+                        if (commandRes == -1)
+                        {
+                            send(clientSocket, "Faulty input, please input new command!",40, 0);
+
+                        }
                         int pID = cnt; // Clients ID
                         char path[70];
                         sprintf(path,"../../computed_results/server_results/matinv_client%d_sol.txt",pID);
@@ -106,36 +156,13 @@ void serverInterface(){
                         free(data);
                         free(buffer);
                         send(clientSocket, "", 1, 0); // Data transmission completed
-                        // if (remove(path) == 0){ // Remove file after sending the data to the client
-                        //     printf("Solution file deleted successfully!\n");
-                        // } else {
-                        //     printf("Failed to delete solution file!\n");
-                        // }
-                    }
-                    else{
-                        int size = 4096;
-                        char* data = malloc(size);
-                        FILE* f;
-                        f = fopen("kmeans-results.txt", "r");
-                        while(fgets(data, size, f) != NULL){
-                            printf("%s \n", data);
-                            if(send(clientSocket, data, size, 0) == -1){
-                                perror("Sending data failed");
-                                exit(1);
-                            }
-                            bzero(data, size);
-                        }
-                        fclose(f);
-                        // send(clientSocket, fp,sizeof(fp), 0);
-                        free(data);
-                        free(buffer);
-                        send(clientSocket, "", 1, 0); // Data transmission completed
-                        if (remove("kmeans-results.txt") == 0){ // Remove file after sending the data to the client
+                        if (remove(path) == 0){ // Remove file after sending the data to the client
                             printf("Solution file deleted successfully!\n");
                         } else {
                             printf("Failed to delete solution file!\n");
                         }
                     }
+
                 }
                 commandRes = 0;
             }
@@ -145,11 +172,11 @@ void serverInterface(){
     close(clientSocket);
 }
 
-int readBuffer(char* buff){
+int readBuffer(char* buff, char* k, int N, char* path){
 
     if(buff[0] == 'k'){ // Kmeans is to be run
         printf("kmeans \n");
-        // start_kmeans();
+        start_kmeans(k, N, path);
         return 0;
 
     }
