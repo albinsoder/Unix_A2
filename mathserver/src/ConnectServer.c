@@ -91,41 +91,22 @@ void serverInterface(){
                 printf("Client: %d commanded: ", cnt);
                 puts(buffer);
                 if(buffer[0] =='k'){
-                    printf("KMEANS \n");
                     int size = 4096;
-                    char* data = malloc(size);
-                    fp = fopen("kmeans-data-server.txt", "w");
-                    int n;
-                    int iteration =0;
-                    while(1){
-                        n = recv(clientSocket, data, size, 0);
-                        iteration++;
-                        // printf("I: %d \n", iteration);
-                        fflush(stdout);
-                        
-                        if (n == 1)
-                        {   
-                            printf("KLARA NU DED\n");
-                            iteration--;
-                            break;
-                        }
-                        fprintf(fp, "%s", data);
-                        bzero(data, size);
-                    }
-                    char* k = malloc(1024);
+                    int pIDKmeans = cnt;
+                    char path[70];
+                    sprintf(path, "../../computed_results/server_inputs/kmeans_client%d_input.txt", cnt);
+                    int iteration = recFile(pIDKmeans, size, path);
+                    char k[1024];
                     recv(clientSocket, k, 1024, 0);
-
-                    fclose(fp);
-                    free(data);
+                    printf("K: %s ", k);
                     printf("DONE \n");
-                    commandRes = readBuffer(buffer,k, iteration, "kmeans-data-server.txt");
+                    commandRes = readBuffer(buffer,k, iteration, path);
                     if (commandRes == -1)
                     {
                         send(clientSocket, "Faulty input, please input new command!",40, 0);
 
                     }
-                    free(k);
-                // strncpy(copyBuffer, buffer, sizeof(buffer));
+                    // free(k);
                 }
                 else{
                     if(buffer[0] == 'm'){
@@ -138,29 +119,9 @@ void serverInterface(){
                         int pID = cnt; // Clients ID
                         char path[70];
                         sprintf(path,"../../computed_results/server_results/matinv_client%d_sol.txt",pID);
-                        printf("PATH: %s \n" , path);
                         int size = 4096;
-                        char* data = malloc(size);
-                        FILE* f;
-                        f = fopen(path, "r");
-                        while(fgets(data, size, f) != NULL){
-                            printf("%s \n", data);
-                            if(send(clientSocket, data, size, 0) == -1){
-                                perror("Sending data failed");
-                                exit(1);
-                            }
-                            bzero(data, size);
-                        }
-                        fclose(f);
-                        // send(clientSocket, fp,sizeof(fp), 0);
-                        free(data);
+                        sendFile(pID, size, path);
                         free(buffer);
-                        send(clientSocket, "", 1, 0); // Data transmission completed
-                        if (remove(path) == 0){ // Remove file after sending the data to the client
-                            printf("Solution file deleted successfully!\n");
-                        } else {
-                            printf("Failed to delete solution file!\n");
-                        }
                     }
 
                 }
@@ -173,44 +134,13 @@ void serverInterface(){
 }
 
 int readBuffer(char* buff, char* k, int N, char* path){
-
     if(buff[0] == 'k'){ // Kmeans is to be run
         printf("kmeans \n");
-        start_kmeans(k, N, path);
+        start_kmeans(k, N, path, cnt);
         return 0;
-
     }
     else if(buff[0] == 'm'){ // Matinv is to be run
-        // printf("matinv \n");
-        char** tmpBuff = (char**)malloc(1024);
-        char* newBuff = malloc(1024);
-        int j,len,countArg;
-        j=0;
-        len=0;
-        countArg=0;
-        for (int i=0; i<1024; i++)          
-        {
-            newBuff[j] = buff[i];
-            j++;
-            if(buff[i] == '\0'){
-                tmpBuff[len] = (char*)malloc(strlen(newBuff)+1);
-                strcpy(tmpBuff[len], newBuff);
-                len++;
-                free(newBuff);
-                break;
-            }
-            if (buff[i] == ' '){
-                countArg++;
-                tmpBuff[len] = (char*)malloc(strlen(newBuff)+1);
-                newBuff[j] = '\0';
-                strcpy(tmpBuff[len], newBuff);
-                len++;
-                j=0;
-                free(newBuff);
-                newBuff = malloc(1024);
-            }
-                
-        }
+        char** tmpBuff = readMessage(buff);
         start_mat(countArg, tmpBuff, cnt);
         return 0;
     }
@@ -220,10 +150,7 @@ int readBuffer(char* buff, char* k, int N, char* path){
     return 0;
 }
 
-void sendMatFile(int pID){
-    char path[70];
-    sprintf(path,"../../computed_results/server_results/matinv_client%d_sol.txt",pID);
-    int size = 4096;
+void sendFile(int pID, int size, char* path){
     char* data = malloc(size);
     FILE* f;
     f = fopen(path, "r");
@@ -236,13 +163,74 @@ void sendMatFile(int pID){
         bzero(data, size);
     }
     fclose(f);
-    // send(clientSocket, fp,sizeof(fp), 0);
     free(data);
-    free(buffer);
     send(clientSocket, "", 1, 0); // Data transmission completed
     if (remove(path) == 0){ // Remove file after sending the data to the client
         printf("Solution file deleted successfully!\n");
     } else {
         printf("Failed to delete solution file!\n");
     }
+}
+
+int recFile(int pID, int size, char* path){
+    char* data = malloc(size);
+    FILE* f;
+    f = fopen(path, "w");
+    int n;
+    int iteration =0;
+    while(1){
+        n = recv(clientSocket, data, size, 0);
+        iteration++;
+        // printf("I: %d \n", iteration);
+        // fflush(stdout);
+        
+        if (n == 1)
+        {   
+            printf("KLARA NU DED\n");
+            iteration--;
+            break;
+        }
+        fprintf(f, "%s", data);
+        bzero(data, size);
+    }
+    fclose(f);
+    free(data);
+    return iteration;
+
+
+}
+
+char** readMessage(char* buff){
+    char** tmpBuff = (char**)malloc(1024);
+    char* newBuff = malloc(1024);
+    int j,len;
+    j=0;
+    len=0;
+    countArg=0;
+    for (int i=0; i<1024; i++)          
+    {
+        newBuff[j] = buff[i];
+        j++;
+        if(buff[i] == '\0'){
+            tmpBuff[len] = (char*)malloc(strlen(newBuff)+1);
+            strcpy(tmpBuff[len], newBuff);
+            len++;
+            free(newBuff);
+            break;
+        }
+        if (buff[i] == ' '){
+            countArg++;
+            tmpBuff[len] = (char*)malloc(strlen(newBuff)+1);
+            newBuff[j] = '\0';
+            strcpy(tmpBuff[len], newBuff);
+            len++;
+            j=0;
+            free(newBuff);
+            newBuff = malloc(1024);
+        }
+            
+    }
+    // free(newBuff);
+    return tmpBuff;
+    // free(tmpBuff);
 }

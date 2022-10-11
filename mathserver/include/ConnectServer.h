@@ -38,7 +38,7 @@ char* buffer;
 pid_t childpid;
 char *firstArg;
 char* copyBuffer;
-
+int countArg;
 // Setup server socket
 void initialize(int port);
 // Interface waiting for commands from clients
@@ -47,7 +47,8 @@ void serverInterface();
 // and perform the asked for calculations
 int readBuffer(char* buff, char k[1024], int N, char* path);
 // Send matinv-file to client
-void sendMatFile(int);
+void sendFile(int pID, int size, char* path);
 char** readMessage(char* buff);
+int recFile(int pID, int size, char* path);
 
 #endif

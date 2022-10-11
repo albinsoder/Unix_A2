@@ -23,7 +23,7 @@ void read_data(int input_k, int input_N, char* path)
     }
     printf("Read the problem data!\n");
     // Initialize centroids randomly
-    srand(0); // Setting 0 as the random number generation seed
+    srand(1); // Setting 0 as the random number generation seed
     for (int i = 0; i < k; i++)
     {
         int r = rand() % N;
@@ -88,6 +88,7 @@ void* assign_clusters_to_points(void* id)
             something_changed = true;
         }
     }
+    // pthread_barrier_wait(&barrier);
     update_cluster_centers(start, end);
 
     // printf("BOOL: %d", something_changed);
@@ -139,7 +140,8 @@ int kmean(int k)
     }
     // pthread_barrier_init(&barrier, NULL, n_threads);                          // Initialize barrier
     struct th* t_info;
-    
+    pthread_barrier_init(&barrier, NULL, n_threads);                          // Initialize barrier
+
     do {
         iter++; // Keep track of number of iterations
         for(int id=0; id<n_threads; id++){
@@ -162,6 +164,7 @@ int kmean(int k)
         for (int id = 0; id < n_threads; id++) {
             pthread_join(children[id], NULL);                                 // Collect/join result from the threads
         }
+        // pthread_barrier_destroy(&barrier);
         update_cluster_centers_continue();
     } while (something_changed);
     free(children);
@@ -171,9 +174,11 @@ int kmean(int k)
 
 }
 
-void write_results()
+void write_results(int pID)
 {
-    FILE* fp = fopen("kmeans-results.txt", "w");
+    char path[70];
+    sprintf(path, "../../computed_results/server_results/kmeans_client%d_sol.txt", pID);
+    FILE* fp = fopen(path, "w");
     if (fp == NULL) {
         perror("Cannot open the file");
         exit(EXIT_FAILURE);
@@ -185,19 +190,22 @@ void write_results()
             fprintf(fp, "%.2f %.2f %d\n", data[i].x, data[i].y, data[i].cluster);
         }
     }
+    fclose(fp);
     printf("Wrote the results to a file!\n");
 }
 
-int start_kmeans(char* k, int N, char* path)
+int start_kmeans(char* k, int N, char* path, int pID)
 {
     int input_k = atoi(k);
     read_data(input_k, N, path); 
     kmean(input_k);
-    write_results();
+    write_results(pID);
+    return 0;
 }
 // int main()
 // {
-//     read_data(); 
+//     read_data(9, 1797, "../../computed_results/server_inputs/kmeans_client1_input.txt"); 
 //     kmean(k);
 //     write_results();
+
 // }

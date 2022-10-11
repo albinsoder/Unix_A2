@@ -27,7 +27,7 @@ struct th
     int factor;
 };
 pthread_t *children;
-// pthread_barrier_t barrier;
+pthread_barrier_t barrier;
 
 int	N;		// number of entries in the data
 int k;      // number of centroids
@@ -39,7 +39,7 @@ int get_closest_centroid(int i, int k);
 void* assign_clusters_to_points(void* id);
 void update_cluster_centers();
 int kmean(int k);
-void write_results();
-int start_kmeans(char* k, int N, char* path);
+void write_results(int pID);
+int start_kmeans(char* k, int N, char* path, int pID);
 
 #endif

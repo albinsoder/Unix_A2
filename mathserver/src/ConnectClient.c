@@ -107,16 +107,22 @@ void clientInterface(){
                 bzero(data, size);
             }
             int i=0;
-            // while(1){
-            //     i++;
-            //     if(retBuff[i] == "k"){
-            //         send(clientSocket, retBuff[i], sizeof(retBuff[i+1]), 0);
-            //         break;
-            //     }
-            // }
-
             fclose(f);
             send(clientSocket, "", 1, 0); // Data transmission completed
+            // fflush(stdout);
+            // printf("VILL HA K: %s \n", retBuff[2]);
+            while(1){
+                i++;
+                printf("%s \n", retBuff[i]);
+                if(strncmp(retBuff[i],"-k", 2) == 0){
+                    char* k = malloc(1024);
+                    k = retBuff[i+1];
+                    send(clientSocket, k, 1024, 0);
+                    free(k);
+                    break;
+                }
+            }
+
             // send(clientSocket, fp,sizeof(fp), 0);
             free(data);        }
         else {

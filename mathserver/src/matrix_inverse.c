@@ -50,8 +50,8 @@ start_mat(int argc, char** argv, int processId){
     {
         //Print_Matrix(A, "End: Input");
         Print_Matrix(I, "Inversed");
-        Write_To_File(I, processId);
     }    
+    Write_To_File(I, processId);
 }
 
 void find_inverse()
