@@ -7,6 +7,9 @@ void read_data(int input_k, int input_N, char* path)
 {
     N = input_N;
     k = input_k;
+    printf("N: %d \n", N);
+    printf("k: %d \n", k);
+    printf("N: %s \n", path);
     FILE* fp = fopen(path, "r");
     if (fp == NULL) {
         perror("Cannot open the file");
@@ -23,10 +26,11 @@ void read_data(int input_k, int input_N, char* path)
     }
     printf("Read the problem data!\n");
     // Initialize centroids randomly
-    srand(1); // Setting 0 as the random number generation seed
+    srand(0); // Setting 0 as the random number generation seed
     for (int i = 0; i < k; i++)
     {
         int r = rand() % N;
+        printf("R: %d \n", r);
         cluster[i].x = data[r].x;
         cluster[i].y = data[r].y;
     }
@@ -94,11 +98,11 @@ void* assign_clusters_to_points(void* id)
     // printf("BOOL: %d", something_changed);
 }
 
-int count[MAX_CLUSTERS] = { 0 }; // Array to keep track of the number of points in each cluster
-point temp[MAX_CLUSTERS] = { 0.0 };
 void update_cluster_centers(int start, int end)
 {
     /* Update the cluster centers */
+    int count[MAX_CLUSTERS] = { 0 }; // Array to keep track of the number of points in each cluster
+    point temp[MAX_CLUSTERS] = { 0.0 };
     int c;
 
     for (int i = start; i < end; i++)
@@ -108,11 +112,14 @@ void update_cluster_centers(int start, int end)
         temp[c].x += data[i].x;
         temp[c].y += data[i].y;
     }
+    // pthread_barrier_wait(&barrier);
+    start=0;
+    update_cluster_centers_continue(count, temp, start);
 
 }
-void update_cluster_centers_continue()
+void update_cluster_centers_continue(int count[MAX_CLUSTERS], point temp[MAX_CLUSTERS], int start)
 {
-    for (int i = 0; i < k; i++)
+    for (int i = start; i < k; i++)
     {
         cluster[i].x = temp[i].x / count[i];
         cluster[i].y = temp[i].y / count[i];
@@ -165,7 +172,7 @@ int kmean(int k)
             pthread_join(children[id], NULL);                                 // Collect/join result from the threads
         }
         // pthread_barrier_destroy(&barrier);
-        update_cluster_centers_continue();
+        // update_cluster_centers_continue();
     } while (something_changed);
     free(children);
     free(t_info);
@@ -177,7 +184,8 @@ int kmean(int k)
 void write_results(int pID)
 {
     char path[70];
-    sprintf(path, "../../computed_results/server_results/kmeans_client%d_sol.txt", pID);
+    sprintf(path,"../../computed_results/server_results/kmeans%d_sol.txt",pID);
+
     FILE* fp = fopen(path, "w");
     if (fp == NULL) {
         perror("Cannot open the file");
@@ -204,8 +212,8 @@ int start_kmeans(char* k, int N, char* path, int pID)
 }
 // int main()
 // {
-//     read_data(9, 1797, "../../computed_results/server_inputs/kmeans_client1_input.txt"); 
+//     read_data(9, 1797, "kmeans-data.txt"); 
 //     kmean(k);
-//     write_results();
+//     write_results(1);
 
 // }

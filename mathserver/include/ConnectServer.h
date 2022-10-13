@@ -39,6 +39,7 @@ pid_t childpid;
 char *firstArg;
 char* copyBuffer;
 int countArg;
+int len;
 // Setup server socket
 void initialize(int port);
 // Interface waiting for commands from clients
@@ -48,7 +49,8 @@ void serverInterface();
 int readBuffer(char* buff, char k[1024], int N, char* path);
 // Send matinv-file to client
 void sendFile(int pID, int size, char* path);
-char** readMessage(char* buff);
+char** readMessage(char* buff, char** tmpBuff);
 int recFile(int pID, int size, char* path);
+void freeMessage(char** tmpBuff);
 
 #endif

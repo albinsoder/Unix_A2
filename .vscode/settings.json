@@ -5,6 +5,7 @@
         "connectserver.h": "c",
         "types.h": "c",
         "matrix_inverse.h": "c",
-        "assert.h": "c"
+        "assert.h": "c",
+        "stat.h": "c"
     }
 }

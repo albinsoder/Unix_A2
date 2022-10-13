@@ -28,10 +28,14 @@ struct stat dirCreator;
 char buffer[1024];
 char* newMsg;
 
+// Initialize the client (create socket, needed directoriesm set port and IP)
 void initialize(int port, char* ip);
+// Connect to the server
 void connectToServer(char clientNr);
 void clientInterface();
-char** readMessage(char* buff);
+char** readMessage(char* buff, char** tmpBuff);
+void sendFile(int size, char* path, char **retBuff);
+int recFile(int size, char* path);
 
 
 #endif

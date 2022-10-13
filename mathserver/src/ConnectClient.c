@@ -47,12 +47,14 @@ void connectToServer(char clientNr){
 void clientInterface(){
     int connected =1;
     char clientNmbr[4];
+    unsigned int c_nr;
     if (recv(clientSocket, buffer, 1024, 0)< 0) {
         printf("Error in receiving data.\n");
     }
     else {
         printf("Client connected as: %s\n", buffer);
         strncpy(clientNmbr, buffer, 4);
+        c_nr = (u_int64_t)clientNmbr;
         bzero(buffer, sizeof(buffer));
     }
     newMsg = NULL;
@@ -63,12 +65,12 @@ void clientInterface(){
         fflush(stdin);
         // recv() receives the message
         // from server and stores in buffer
+        int matrixFileCount = 0;
+        int kmeansFileCount = 0;
         FILE* fp;
         int size = 4096;
         char* data = malloc(size);
         DIR *directory;
-        int matrixFileCount = 0;
-        int kmeansFileCount = 0;
         int fileValue = 8; // Value of dir entry being a file
         char path[70]; // Array holding path+filename of result file
         directory = opendir("../../computed_results");
@@ -92,62 +94,26 @@ void clientInterface(){
             printf("Failed to close directory\n");
             break;
         }
-        char** retBuff;
-        retBuff = readMessage(newMsg);
+        char** retBuff = malloc(1024);
+        retBuff = readMessage(newMsg, retBuff);
         if(retBuff[0][0] == 'k'){
             char* data = malloc(size);
             FILE* f;
-            f = fopen("kmeans-data.txt", "r");
-            while(fgets(data, size, f) != NULL){
-                printf("%s \n", data);
-                if(send(clientSocket, data, size, 0) == -1){
-                    perror("Sending data failed");
-                    exit(1);
-                }
-                bzero(data, size);
-            }
-            int i=0;
-            fclose(f);
-            send(clientSocket, "", 1, 0); // Data transmission completed
-            // fflush(stdout);
-            // printf("VILL HA K: %s \n", retBuff[2]);
-            while(1){
-                i++;
-                printf("%s \n", retBuff[i]);
-                if(strncmp(retBuff[i],"-k", 2) == 0){
-                    char* k = malloc(1024);
-                    k = retBuff[i+1];
-                    send(clientSocket, k, 1024, 0);
-                    free(k);
-                    break;
-                }
-            }
+            bzero(path, sizeof(path));
+            strcpy(path, "kmeans-data.txt");
+            sendFile(size, path, retBuff);
+
+            bzero(path, sizeof(path));
+            sprintf(path, "../../computed_results/kmeans%s_soln%d.txt", clientNmbr,kmeansFileCount);
+            recFile(size, path);
 
             // send(clientSocket, fp,sizeof(fp), 0);
             free(data);        }
         else {
             sprintf(path, "../../computed_results/matinv_client%s_soln%d.txt", clientNmbr,matrixFileCount);
-            fp = fopen(path, "w");
-            int n;
-
-            while(1){
-                n = recv(clientSocket, data, size, 0);
-                // printf("%s \n", data);
-                // printf("Tjabba \n");
-                // printf("N: %d \n", n);
-                fflush(stdout);
-                if (n == 1)
-                {   
-                    printf("KLARA NU DED\n");
-                    break;
-                }
-                fprintf(fp, "%s", data);
-                bzero(data, size);
-            }
-            fclose(fp);
-            free(data);
-            printf("DONE \n");
+            recFile(size, path);
         }
+        free(retBuff);
 
         // puts(buffer);
         // bzero(buffer, sizeof(buffer));
@@ -156,8 +122,47 @@ void clientInterface(){
     close(clientSocket);
 
  }
-char** readMessage(char* buff){
-    char** tmpBuff = (char**)malloc(1024);
+
+void sendFile(int size, char* path, char** retBuff){
+    char* data = malloc(size);
+    int i=0;
+    FILE* f;
+    f = fopen(path, "r");
+    while(fgets(data, size, f) != NULL){
+        // printf("%s \n", data);
+        if(send(clientSocket, data, size, 0) == -1){
+            perror("Sending data failed");
+            exit(1);
+        }
+        bzero(data, size);
+    }
+    send(clientSocket, "", 1, 0); // Data transmission completed
+    fclose(f);
+    free(data);
+}
+
+int recFile(int size, char* path){
+    char* data = malloc(size);
+    FILE* f;
+    f = fopen(path, "w");
+    int n;
+    while(1){
+        n = recv(clientSocket, data, size, 0);        
+        if (n == 1)
+        {   
+            printf("KLARA NU DED\n");
+            break;
+        }
+        fprintf(f, "%s", data);
+        bzero(data, size);
+    }
+    fclose(f);
+    free(data);
+    return 0;
+
+}
+
+char** readMessage(char* buff, char** tmpBuff){
     char* newBuff = malloc(1024);
     int j,len,countArg;
     j=0;
