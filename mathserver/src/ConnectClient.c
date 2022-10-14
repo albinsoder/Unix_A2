@@ -99,16 +99,35 @@ void clientInterface(){
         if(retBuff[0][0] == 'k'){
             char* data = malloc(size);
             FILE* f;
+            char* path_input = malloc(70);
+            int flag=0;
             bzero(path, sizeof(path));
-            strcpy(path, "kmeans-data.txt");
-            sendFile(size, path, retBuff);
-
-            bzero(path, sizeof(path));
+            // printf("ARG: %d \n", arg);
+            if(arg >= 3){
+                for(int i=0; i<arg; i++){
+                    if(strncmp(retBuff[i],"-f", 2) == 0){
+                        printf("retBuff: %s \n", retBuff[i+1]);
+                        // strcpy(path_input, retBuff[i+1]);
+                        path_input = retBuff[i+1];
+                        flag=1;
+                        break;
+                    }
+                }
+            }
+            if(!flag){
+                strcpy(path_input, "kmeans-data.txt");
+            }
+            // printf("PATH: %s, SIZE: %d \n", path_input, size);
+            sendFile(size, path_input, retBuff);
+            // printf("PATH2: \n");
+            free(path_input);
+            // bzero(path, sizeof(path));
             sprintf(path, "../../computed_results/kmeans%s_soln%d.txt", clientNmbr,kmeansFileCount);
             recFile(size, path);
 
             // send(clientSocket, fp,sizeof(fp), 0);
-            free(data);        }
+            free(data);        
+        }
         else {
             sprintf(path, "../../computed_results/matinv_client%s_soln%d.txt", clientNmbr,matrixFileCount);
             recFile(size, path);
@@ -136,7 +155,7 @@ void sendFile(int size, char* path, char** retBuff){
         }
         bzero(data, size);
     }
-    send(clientSocket, "", 1, 0); // Data transmission completed
+    send(clientSocket, "\n.\n", 4, 0); // Data transmission completed
     fclose(f);
     free(data);
 }
@@ -147,8 +166,9 @@ int recFile(int size, char* path){
     f = fopen(path, "w");
     int n;
     while(1){
-        n = recv(clientSocket, data, size, 0);        
-        if (n == 1)
+        n = recv(clientSocket, data, size, 0);
+        // printf("DATA: %s", data);        
+        if (strcmp(data, "\n.\n")==0)
         {   
             printf("KLARA NU DED\n");
             break;
@@ -164,27 +184,28 @@ int recFile(int size, char* path){
 
 char** readMessage(char* buff, char** tmpBuff){
     char* newBuff = malloc(1024);
-    int j,len,countArg;
+    int j,countArg;
     j=0;
-    len=0;
+    arg=0;
     countArg=0;
     for (int i=0; i<1024; i++)          
     {
         newBuff[j] = buff[i];
         j++;
-        if(buff[i] == '\0'){
-            tmpBuff[len] = (char*)malloc(strlen(newBuff)+1);
-            strcpy(tmpBuff[len], newBuff);
-            len++;
+        if(buff[i] == '\n'){
+            tmpBuff[arg] = (char*)malloc(strlen(newBuff)+1);
+            newBuff[j-1] = '\0';
+            strcpy(tmpBuff[arg], newBuff);
+            arg++;
             free(newBuff);
             break;
         }
         if (buff[i] == ' '){
             countArg++;
-            tmpBuff[len] = (char*)malloc(strlen(newBuff)+1);
+            tmpBuff[arg] = (char*)malloc(strlen(newBuff)+1);
             newBuff[j] = '\0';
-            strcpy(tmpBuff[len], newBuff);
-            len++;
+            strcpy(tmpBuff[arg], newBuff);
+            arg++;
             j=0;
             free(newBuff);
             newBuff = malloc(1024);

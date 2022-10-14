@@ -15,22 +15,22 @@
 #include "matrix_inverse.h"
 #include "kmeans.h"
 
-// Int setup
+// Setup needed global ints
 int sockfd, ret, cnt, commandRes;
 
-// Server socket address structures
+// Set up socket address struct for the server
 struct sockaddr_in serverAddr;
+
+// Address structures of the client socket
+struct sockaddr_in cliAddr;
 
 // Struct using stat to check if server_results & server_input exists
 struct stat dirCreator;
 
-// Client socket id
+// Socket of client
 int clientSocket;
 
-// Client socket address structures
-struct sockaddr_in cliAddr;
-
-// Stores server socket address
+// Store the servers socket address
 socklen_t addr_size;
 char* buffer;
 
@@ -40,17 +40,22 @@ char *firstArg;
 char* copyBuffer;
 int countArg;
 int len;
-// Setup server socket
+
+// Setup server socket (IP + port)
 void initialize(int port);
 // Interface waiting for commands from clients
 void serverInterface();
-// Filter input from client, check if kmeans or matinv is to be run
+// Check input from client, if kmeans or matinv is to be run
 // and perform the asked for calculations
 int readBuffer(char* buff, char k[1024], int N, char* path);
-// Send matinv-file to client
+
+// Send file to client (connection number, size of buffer, path to file)
 void sendFile(int pID, int size, char* path);
+// Filter command input, remove whitespaces etc and store in char** array
 char** readMessage(char* buff, char** tmpBuff);
+// Recieve file (connection number, size of buffer, path to file where recieved data is to be written)
 int recFile(int pID, int size, char* path);
-void freeMessage(char** tmpBuff);
+// Free allocated char buffers
+void freeMessage(char** tmpBuff, char check);
 
 #endif

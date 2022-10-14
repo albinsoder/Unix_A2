@@ -15,7 +15,7 @@
 
 int clientSocket, ret;
 size_t len;
-
+int arg;
 // Client socket structure
 struct sockaddr_in cliAddr, serverAddr;
 // Directory struct for reading filenames in specified directory

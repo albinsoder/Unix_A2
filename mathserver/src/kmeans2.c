@@ -42,7 +42,7 @@ void read_data()
     for (int i = 0; i < k; i++)
     {
         int r = rand() % N;
-        printf("R: %d \n", r);
+        printf("Cluster: %f \n", data[r].x);
         cluster[i].x = data[r].x;
         cluster[i].y = data[r].y;
     }
@@ -125,7 +125,7 @@ int kmeans(int k)
 
 void write_results()
 {
-    FILE* fp = fopen("kmeans-results3.txt", "w");
+    FILE* fp = fopen("kmeans-results5.txt", "w");
     if (fp == NULL) {
         perror("Cannot open the file");
         exit(EXIT_FAILURE);

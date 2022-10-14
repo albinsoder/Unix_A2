@@ -5,17 +5,14 @@
 // Main function, running the server
 int main(int argc, char *argv[]) {
     int port;
-    if (argc > 1 && argv[1][0] == '-' && argv[1][1] == 'p'){
+    if (argc > 1 && argv[1][0] == '-' && argv[1][1] == 'p'){ // If -p was specified on launch of the server
         port = atoi(argv[2]);
-        // printf("%s, %i \n", argv[2], port);
     }
     else {
         printf("Port was not provided, assuming standard port: 5000\n");
         port = 5000;
-        // printf("\n%i \n", port);
     }
-    initialize(port);
-    serverInterface();
-
+    initialize(port); // Set up server socket
+    serverInterface(); // Interface that accepts commands from client and performs them
     return 0;
 }

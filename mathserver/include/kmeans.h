@@ -19,6 +19,12 @@ typedef struct point
     int cluster; // The cluster that the point belongs to
 } point;
 
+typedef struct thread_info
+{
+    int new_cluster;
+    int old_cluster;
+} thread_info;
+
 struct th
 {
     int start;
@@ -33,6 +39,7 @@ int	N;		// number of entries in the data
 int k;      // number of centroids
 point data[MAX_POINTS];		// Data coordinates
 point cluster[MAX_CLUSTERS]; // The coordinates of each cluster center (also called centroid)
+thread_info t[MAX_POINTS];
 
 void read_data(int input_k, int input_N, char* path);
 int get_closest_centroid(int i, int k);

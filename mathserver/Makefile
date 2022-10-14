@@ -1,26 +1,39 @@
-IDIR =/include
-CC=gcc
-CFLAGS=-I$(IDIR)
+# all: server client
 
-ODIR=/objects
-LDIR =../lib
+# server: TCPserver.c
+#     gcc -o server TCPserver.c ConnectServer.C kmeans.c matrix_inverse.c 
 
-LIBS=-lm
+# client: TCPclient.c
+#     gcc -o client TCPclient.c ConnectClient.c
 
-_DEPS = ConnectServer.h ConnectClient.h
-DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
+PROJECT := main.exe
 
-_OBJ = UDPclient.o UDPserver.o ConnectClient.o ConnectServer.o
-OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
+DIR_SRC += .
+DIR_SRC += ./src
 
+DIR_INC += -lpthread 
+DIR_INC += -I./inc 
+DIR_INC += $(addprefix -I, $(DIR_SRC))
 
-$(ODIR)/%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+SRC_C += $(wildcard $(addsuffix /*.c, $(DIR_SRC)))
+#OBJ := $(filter %.o, $(SRC_C:.c=.o))
+OBJ := $(patsubst %.c, %.o, $(SRC_C))
+EXE := $(PROJECT)
 
-hellomake: $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+CC_PREFIX := 
+CC := $(CC_PREFIX)gcc
+CFLAG = 
+CLIB = -L .
 
-.PHONY: clean
+.PHONY:all
+
+all:$(OBJ) $(EXE)
+
+%.o: %.c
+    $(CC) $(CFLAG) $(DIR_INC) -c $< -o $@ 
+
+$(EXE): $(OBJ)
+    $(CC) $(CFLAG) $(CLIB) $(OBJ) -o $@ 
 
 clean:
-	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~ 
+    rm -r $(EXE) $(OBJ) 

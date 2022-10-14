@@ -10,7 +10,6 @@
 /* forward declarations */
 
 // I = {0.0};
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 matrix I = {0.0};
 
@@ -156,7 +155,6 @@ void
 Init_Matrix()
 {
     int row, col;
-    // pthread_mutex_lock(&mutex);
     // Set the diagonal elements of the inverse matrix to 1.0
     // So that you get an identity matrix to begin with
     for (row = 0; row < N; row++) {
@@ -192,7 +190,6 @@ Init_Matrix()
             }
         }
     }
-    // pthread_mutex_unlock(&mutex);
 
     printf("done \n\n");
     if (PRINT == 1)
