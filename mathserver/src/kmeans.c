@@ -220,10 +220,10 @@ int start_kmeans(char* k, int N, char* path, int pID)
     write_results(pID);
     return 0;
 }
-int main()
-{
-    read_data(9, 1797, "kmeans-data.txt"); 
-    kmean(k);
-    write_results(1);
+// int main()
+// {
+//     read_data(9, 1797, "kmeans-data.txt"); 
+//     kmean(k);
+//     write_results(1);
 
-}
+// }

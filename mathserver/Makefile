@@ -1,39 +1,19 @@
-# all: server client
+# Compile server + client executables:
+# $ make all
+# Cleanup executables:
+# $ make clean
 
-# server: TCPserver.c
-#     gcc -o server TCPserver.c ConnectServer.C kmeans.c matrix_inverse.c 
-
-# client: TCPclient.c
-#     gcc -o client TCPclient.c ConnectClient.c
-
-PROJECT := main.exe
-
-DIR_SRC += .
 DIR_SRC += ./src
+DIR_OBJ += ./objects
+DIR_INC += ./include
 
-DIR_INC += -lpthread 
-DIR_INC += -I./inc 
-DIR_INC += $(addprefix -I, $(DIR_SRC))
+all: client server
 
-SRC_C += $(wildcard $(addsuffix /*.c, $(DIR_SRC)))
-#OBJ := $(filter %.o, $(SRC_C:.c=.o))
-OBJ := $(patsubst %.c, %.o, $(SRC_C))
-EXE := $(PROJECT)
+server:
+	gcc -Werror -pthread $(DIR_SRC)/TCPserver.c $(DIR_SRC)/ConnectServer.c $(DIR_SRC)/kmeans.c $(DIR_SRC)/matrix_inverse.c -o $(DIR_OBJ)/server
 
-CC_PREFIX := 
-CC := $(CC_PREFIX)gcc
-CFLAG = 
-CLIB = -L .
-
-.PHONY:all
-
-all:$(OBJ) $(EXE)
-
-%.o: %.c
-    $(CC) $(CFLAG) $(DIR_INC) -c $< -o $@ 
-
-$(EXE): $(OBJ)
-    $(CC) $(CFLAG) $(CLIB) $(OBJ) -o $@ 
+client:
+	gcc -Werror $(DIR_SRC)/TCPclient.c $(DIR_SRC)/ConnectClient.c -o $(DIR_OBJ)/client
 
 clean:
-    rm -r $(EXE) $(OBJ) 
+	rm $(DIR_OBJ)/server $(DIR_OBJ)/client
