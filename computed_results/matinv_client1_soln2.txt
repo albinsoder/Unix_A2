@@ -1,8 +1,0 @@
-
-Usage: matinvpar 
-           [-n problemsize] 
-           [-D] show default values 
-           [-h] help 
-           [-I init_type] fast/rand 
-           [-m maxnum] max random no 
-           [-P print_switch] 0/1 

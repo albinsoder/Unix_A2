@@ -5,9 +5,9 @@
 // Main function, running the server
 int main(int argc, char **argv) {
     int port = 5000;
-    int p_flag=0;
+    int pFlag=0;
 
-    while (++argv, --argc > 0)
+    while (++argv, --argc > 0) // Check input parameters
         if (**argv == '-')
             switch (*++ * argv) {
             case 'h':
@@ -19,12 +19,12 @@ int main(int argc, char **argv) {
             case 'p':
                 argc--;
                 port = atoi(*++argv);
-                p_flag=1;
+                pFlag=1;
                 break;
             }
     
 
-    if(!p_flag){
+    if(!pFlag){
         printf("Assuming standard port: 5000\n");
     }
 

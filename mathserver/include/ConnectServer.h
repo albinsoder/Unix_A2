@@ -55,9 +55,9 @@ void sendFile(int pID, int size, char* path);
 char** readMessage(char* buff, char** tmpBuff);
 // Recieve file (connection number, size of buffer, path to file where recieved data is to be written)
 int recFile(int pID, int size, char* path);
-//Get value k
+//Get value k for kmeans
 char* getK(char** tmpBuff, char* k);
-// Free allocated char buffers
-void freeMessage(char** tmpBuff, char check);
+
+// Free allocated char** buffers
 
 #endif

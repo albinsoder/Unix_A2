@@ -38,9 +38,9 @@ void read_data(int input_k, int input_N, char* path);
 int get_closest_centroid(int i, int k);
 void* assign_clusters_to_points(void* id);
 void update_cluster_centers();
-void update_cluster_centers_continue(int count[MAX_CLUSTERS], point temp[MAX_CLUSTERS], int start);
 int kmean(int k);
 void write_results(int pID);
+// Callable main function for running kmeans
 int start_kmeans(char* k, int N, char* path, int pID);
 
 #endif

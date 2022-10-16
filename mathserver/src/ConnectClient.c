@@ -7,7 +7,7 @@ void initialize(int port, char* ip){
         mkdir("../../computed_results", 0777);
     }
 
-    clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    clientSocket = socket(AF_INET, SOCK_STREAM, 0); // Create client socket
  
     if (clientSocket < 0) {
         printf("Error in connection.\n");
@@ -15,116 +15,110 @@ void initialize(int port, char* ip){
     }
     printf("Client Socket is created.\n");
  
-    // Initializing socket structure
+    // Initialize the socket struct
     memset(&cliAddr, '\0', sizeof(cliAddr));
  
-    // Initializing buffer
+    // Initialize original buffer with '\0' on every index initially
     memset(buffer, '\0', sizeof(buffer));
  
-    // Assigning port number and IP address
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(port);
-    serverAddr.sin_addr.s_addr = inet_addr(ip);
-
+    // Configure the port number and IP address used to connect to the server
+    serverAddr.sin_family = AF_INET; // Use IPv4
+    serverAddr.sin_port = htons(port); // Set port
+    serverAddr.sin_addr.s_addr = inet_addr(ip); // Set IP
 };
 
-void connectToServer(char clientNr){
+void connectToServer(){
+    // Try to establish connection to server
     ret = connect(clientSocket,(struct sockaddr*)&serverAddr,sizeof(serverAddr));
  
-    if (ret < 0) {
+    if (ret < 0) { // Connection attempt failed
         printf("Error in connection.\n");
         exit(1);
     }
- 
-    printf("Connected to Server.\n");
 
+    printf("Connected to Server.\n");
 }
 
 void clientInterface(){
     int connected =1;
-    int helpFlag = 0;
-    char clientNmbr[4];
-    unsigned int c_nr;
-    if (recv(clientSocket, buffer, 1024, 0)< 0) {
+    int helpFlag = 0; // If client commanded a help command from the matrix inverse
+    char clientNmbr[4]; // Connection ID of the client on the server side
+    if (recv(clientSocket, buffer, 1024, 0)< 0) { // Receive handshake msg from server
         printf("Error in receiving data.\n");
     }
     else {
         printf("Client connected as: %s\n", buffer);
         strncpy(clientNmbr, buffer, 4);
-        c_nr = (u_int64_t)clientNmbr;
         bzero(buffer, sizeof(buffer));
     }
-    // printf("Client%s: ", clientNmbr);
 
     newMsg = NULL;
     while (connected) {
         char path[70]; // Array holding path+filename of result file
-        matrixFileCount = 0;
-        kmeansFileCount = 0;
+        matrixFileCount = 0; // Number of matrix result files
+        kmeansFileCount = 0; // Number of kmeans result files
         int size = 4096;
         char** retBuff = malloc(1024);
 
         printf("Client%s: ", clientNmbr);
-        //Get line of input from user
+        // Get line of input from user
         getline(&newMsg, &len, stdin);
-        //Send to server
+        // Send command to server
         send(clientSocket, newMsg,strlen(newMsg), 0);
-        //Flush stdin
+        // Flush stdin
         fflush(stdin);
-        //Counting the amount of files
+        // Counting the amount of result files
         if(fileCounter() == -1){
             break;
         }
-        //Read input from user
+        // Read input from user
         retBuff = readMessage(newMsg, retBuff);
-        // bzero(newMsg);
-        if(strncmp(retBuff[0], "kmeans",6)==0){
+        if(strncmp(retBuff[0], "kmeans",6)==0){ // If client commanded kmeans
             int flag=0;
-            char* path_input = malloc(70);
-
-
+            char* pathInput = malloc(70);
             //Check if using command -f for file
             if(arg >= 3){
                 for(int i=0; i<arg; i++){
                     if(strncmp(retBuff[i],"-f", 2) == 0){
-                        path_input = retBuff[i+1];
+                        pathInput = retBuff[i+1];
                         flag=1;
                         break;
                     }
                 }
             }
-            //If no file use standard kmeans-data.txt
+            //If no input file were provided, use standard kmeans-data.txt
             size=1024;
             if(!flag){
-                strcpy(path_input, "kmeans-data.txt");
+                strcpy(pathInput, "kmeans-data.txt");
             }
-            sendFile(size, path_input, retBuff);
+            sendFile(size, pathInput); // Send input file to server
+            free(pathInput);
 
-            free(path_input);
-            
-            //Combine resultfile with respective number, then recieve
+            // Create new result file and receive resulting data from server and write to the result file
             sprintf(path, "../../computed_results/kmeans%s_soln%d.txt", clientNmbr,kmeansFileCount);
             recFile(size, path);
-
         }
-        else if (strncmp(retBuff[0], "matinvpar",9)==0) {
+        else if (strncmp(retBuff[0], "matinvpar",9)==0) { // If matinv was commanded by client
+            // Check if client asked for any of the help commands
             if (arg >= 2)
             {
                 for(int i=0; i<arg; i++){
-                    if(strncmp(retBuff[i],"-h", 2) == 0 || strncmp(retBuff[i],"-u", 2) == 0){
+                    if(strncmp(retBuff[i],"-h", 2) == 0 || strncmp(retBuff[i],"-u", 2) == 0 || strncmp(retBuff[i],"-D", 2) == 0){
                         helpFlag = 1;
                         break;
                     }
                 }
             }
+            // Create new result file and receive resulting data from server and write to the result file
             sprintf(path, "../../computed_results/matinv_client%s_soln%d.txt", clientNmbr,matrixFileCount);
             recFile(size, path);
-            if (helpFlag == 1)
+            if (helpFlag == 1) // If any of the help commands were used, print contents of result file to client
             {
                 helpMessage(path);
+                helpFlag=0;
             }
         }
-        else{
+        else{ // If neither kmeans or matinvpar was entered by client
             printf("WRONG INPUT\n");
             printf("Available options:\n");
             printf("[kmeans]\n");
@@ -133,16 +127,15 @@ void clientInterface(){
         free(retBuff);
         bzero(path, sizeof(path));
     }
-    close(clientSocket);
+    close(clientSocket); // Close socket when connection is lost
  }
 
-void sendFile(int size, char* path, char** retBuff){
+void sendFile(int size, char* path){
     char* data = malloc(size);
     int i=0;
-    FILE* f;
+    FILE* f; // File descriptor
     f = fopen(path, "r");
-    while(fgets(data, size, f) != NULL){
-        // printf("%s \n", data);
+    while(fgets(data, size, f) != NULL){ // Send data to server
         if(send(clientSocket, data, size, 0) == -1){
             perror("Sending data failed");
             exit(0);
@@ -150,61 +143,57 @@ void sendFile(int size, char* path, char** retBuff){
         bzero(data, size);
     }
     send(clientSocket, "\n.\n", 4, 0); // Data transmission completed
-    fclose(f);
+    fclose(f); // Close file descriptor 
     free(data);
 }
 
 int recFile(int size, char* path){
     char* data = malloc(size);
-    FILE* f;
+    FILE* f; // New file descriptor
     f = fopen(path, "w");
     int n;
-    while(1){
-        n = recv(clientSocket, data, size, 0);
+    while(1){ // Receive n bytes of data and write to result file
+        n = recv(clientSocket, data, size, 0); // Receive data
         fflush(stdin);
-        if (strcmp(data, "\n.\n")==0 || n==4)
+        if (strcmp(data, "\n.\n")==0 || n==4) // Check if transmission is completed
         {   
-            printf("Succesfuly recieved\n");
+            printf("Successfully received\n");
             break;
         }
-        fprintf(f, "%s", data);
-        bzero(data, size);
+        fprintf(f, "%s", data); // Write data to file
+        bzero(data, size); // Clear data buffer
     }
-    fclose(f);
+    fclose(f); // Close file
     free(data);
     return 0;
-
 }
 
 char** readMessage(char* buff, char** tmpBuff){
     char* newBuff = malloc(1024);
-    int j,countArg;
+    int j;
     j=0;
-    arg=0;
-    countArg=0;
+    arg=0; // Keeps count of entered arguments
     for (int i=0; i<1024; i++)          
     {
         newBuff[j] = buff[i];
         j++;
-        if(buff[i] == '\n'){
+        if(buff[i] == '\n'){ // If newline is found, end of command is found
             tmpBuff[arg] = (char*)malloc(strlen(newBuff)+1);
-            newBuff[j-1] = '\0';
-            strcpy(tmpBuff[arg], newBuff);
+            newBuff[j-1] = '\0'; // Let null termination take the newlines place
+            strcpy(tmpBuff[arg], newBuff); // Copy filtered arg to tmpBuff
             arg++;
             free(newBuff);
             break;
         }
-        if (buff[i] == ' '){
-            countArg++;
+        if (buff[i] == ' '){ // If whitespace is found, the end of a parameter has been found
             tmpBuff[arg] = (char*)malloc(strlen(newBuff)+1);
-            newBuff[j] = '\0';
-            strcpy(tmpBuff[arg], newBuff);
+            newBuff[j] = '\0'; // Add null termination to the parameter
+            strcpy(tmpBuff[arg], newBuff); // Copy filtered arg to tmpBuff
             arg++;
             j=0;
             free(newBuff);
             newBuff = malloc(1024);
         }
-            
     }
     return tmpBuff;
 }
@@ -220,11 +209,11 @@ int fileCounter(){
     }
     while ((entry = readdir(directory)) != NULL) // Check all files in computed_results dir
     {
-        if (entry->d_type == fileValue && entry->d_name[0] == 'm')
+        if (entry->d_type == fileValue && entry->d_name[0] == 'm') // Number of matrix solution files
         {
             matrixFileCount++;
         }
-        else if (entry->d_type == fileValue && entry->d_name[0] == 'k'){
+        else if (entry->d_type == fileValue && entry->d_name[0] == 'k'){ // Number of kmeans solution files
             kmeansFileCount++;
         }
     }
@@ -239,13 +228,13 @@ int fileCounter(){
 
 void helpMessage(char* path){
     char textBuff[70];
-    FILE *rf;
+    FILE *rf; // New file descriptor
     rf = fopen(path, "r");
     if (rf == NULL)
     {
         printf("Help-file cannot be opened");
     }
-    while (fgets(textBuff, 70, rf) != NULL)
+    while (fgets(textBuff, 70, rf) != NULL) // Print help text to client
     {
         printf("%s", textBuff);
     }

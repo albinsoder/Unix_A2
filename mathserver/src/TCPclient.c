@@ -7,10 +7,10 @@ int main(int argc, char **argv) {
     //Default values
     char* ip = "127.0.0.1"; 
     int port = 5000;
-    int ip_flag=0;
-    int p_flag=0;
+    int ipFlag=0;
+    int pFlag=0;
 
-    while (++argv, --argc > 0)
+    while (++argv, --argc > 0) // Check input parameters
         if (**argv == '-')
             switch (*++ * argv) {
             case 'h':
@@ -23,28 +23,28 @@ int main(int argc, char **argv) {
             case 'p':
                 argc--;
                 port = atoi(*++argv);
-                p_flag=1;
+                pFlag=1;
                 break;
             case 'i':
                 if(*++ * argv =='p'){
                     argc--;
                     ip = *++argv;
-                    ip_flag=1;
+                    ipFlag=1;
                 }
                 break;
             }
 
 
-    if(!ip_flag && p_flag){
+    if(!ipFlag && pFlag){
         printf("Assuming standard address: 127.0.0.1\n");
     }
-    else if(ip_flag && !p_flag){
+    else if(ipFlag && !pFlag){
         printf("Assuming standard port: 5000\n");
        
     }
 
     initialize(port,ip); // Start the server with provided port and IP
-    connectToServer(1); // Establish a TCP connection
+    connectToServer(); // Establish a TCP connection
     clientInterface(); // Interface where the client sends and recieves commands/data
 
     return 0;

@@ -138,7 +138,7 @@ int runAlgorithm(char* buff, int N, char* path){
             printf("Failed to delete Input file!\n");
         }
 
-        freeMessage(tmpBuff, buff[0]); // Free tmpBuff, buff[0] is a flag
+        free(tmpBuff); // Free tmpBuff
         return 0; // Done
     }
     else if(buff[0] == 'm'){ // Matinv is to be run
@@ -146,7 +146,7 @@ int runAlgorithm(char* buff, int N, char* path){
         tmpBuff = readMessage(buff, tmpBuff); // Filter the client input
 
         start_mat(countArg, tmpBuff, client); // Run the matinv algorithm
-        freeMessage(tmpBuff, buff[0]); // Free tmpBuff, buff[0] is a flag
+        free(tmpBuff); // Free tmpBuff
 
         return 0; // Done
     }
@@ -218,7 +218,7 @@ char** readMessage(char* buff, char** tmpBuff){
     {
         newBuff[j] = buff[i]; // Copy char from buff to newBuff
         j++;
-        if(buff[i] == '\0'){ // If the char in buff[i] is a string terminator the command-filtering is done
+        if(buff[i] == '\n'){ // If the char in buff[i] is a string terminator the command-filtering is done
             tmpBuff[arg] = (char*)malloc(strlen(newBuff)+1);
             strcpy(tmpBuff[arg], newBuff); // Copy the entirety of stored data to tmpBuff for return
             arg++;
@@ -255,16 +255,4 @@ char* getK(char** tmpBuff, char *k){
     }
     return k;
 
-}
-void freeMessage(char** tmpBuff, char check){
-    // int j = arg;
-    // if(check == 'm'){
-    //     j--;
-    // }
-    // printf("J: %d \n", j);
-    // for(int i=0; i<j-1; i++){
-    //     free(tmpBuff[i]);
-    // }
-    // free(tmpBuff);
-    // arg = 0;
 }
