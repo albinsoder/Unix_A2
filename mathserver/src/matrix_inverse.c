@@ -9,30 +9,7 @@
 
 /* forward declarations */
 
-// I = {0.0};
-
 matrix I = {0.0};
-
-// int
-// main(int argc, char** argv)
-// {
-//     printf("Matrix Inverse\n");
-//     int i, timestart, timeend, iter;
-//     int processId = 2;
-
-//     Init_Default();		/* Init default values	*/
-//     Read_Options(argc, argv);	/* Read arguments	*/
-//     Init_Matrix();		/* Init the matrix	*/
-//     find_inverse();
-
-//     if (PRINT == 1)
-//     {
-//         //Print_Matrix(A, "End: Input");
-//         Print_Matrix(I, "Inversed");
-//         Write_To_File(I, processId);
-//     }
-// }
-
 
 // Main function to call when performing matrix inversion
 int
@@ -41,7 +18,9 @@ start_mat(int argc, char** argv, int processId){
     int i, timestart, timeend, iter;
 
     Init_Default();		/* Init default values	*/
-    Read_Options(argc, argv);	/* Read arguments	*/
+    if(Read_Options(argc, argv, processId) == -1){
+        return 0;
+    }	/* Read arguments	*/
     Init_Matrix();		/* Init the matrix	*/
     find_inverse();
 
@@ -219,13 +198,35 @@ Write_To_File(matrix M, int processID)
     int pID = processID;
     char path[70];
     sprintf(path,"../../computed_results/server_results/matinv_client%d_sol.txt",pID);
-    printf("PATH: %s \n", path);
     fp = fopen(path, "w");
     int row, col;
     for (row = 0; row < N; row++) {
         for (col = 0; col < N; col++)
             fprintf(fp, " %5.2f", M[row][col]);
         fprintf(fp, "\n");
+    }
+    fclose(fp);
+}
+
+void 
+Write_Text_To_File(int flag, int processID){
+    int pID = processID;
+    char path[70];
+    sprintf(path,"../../computed_results/server_results/matinv_client%d_sol.txt",pID);
+    fp = fopen(path, "w");
+    if (flag == 1)
+    {
+        fprintf(fp, "\nUsage: matinvpar \n");
+        fprintf(fp, "           [-n problemsize] \n");
+        fprintf(fp, "           [-D] show default values \n");
+        fprintf(fp, "           [-h] help \n");
+        fprintf(fp, "           [-I init_type] fast/rand \n");
+        fprintf(fp, "           [-m maxnum] max random no \n");
+        fprintf(fp, "           [-P print_switch] 0/1 \n");
+    }
+    else if (flag == 0)
+    {
+        fprintf(fp, "\nHELP: try matinv -u \n\n");
     }
     fclose(fp);
 }
@@ -240,10 +241,10 @@ Init_Default()
 }
 
 int
-Read_Options(int argc, char** argv)
+Read_Options(int argc, char** argv, int processID)
 {
+    int flagH, flagU = -1;
     char* prog;
-
     prog = *argv;
     while (++argv, --argc > 0)
         if (**argv == '-')
@@ -253,24 +254,28 @@ Read_Options(int argc, char** argv)
                 N = atoi(*++argv);
                 break;
             case 'h':
-                printf("\nHELP: try matinv -u \n\n");
+                // printf("\nHELP: try matinv -u \n\n");
+                flagH = 0;
+                Write_Text_To_File(flagH, processID);
                 exit(0);
                 break;
             case 'u':
-                printf("\nUsage: matinv [-n problemsize]\n");
-                printf("           [-D] show default values \n");
-                printf("           [-h] help \n");
-                printf("           [-I init_type] fast/rand \n");
-                printf("           [-m maxnum] max random no \n");
-                printf("           [-P print_switch] 0/1 \n");
-                exit(0);
-                break;
+                // printf("\nUsage: matinv [-n problemsize]\n");
+                // printf("           [-D] show default values \n");
+                // printf("           [-h] help \n");
+                // printf("           [-I init_type] fast/rand \n");
+                // printf("           [-m maxnum] max random no \n");
+                // printf("           [-P print_switch] 0/1 \n");
+                flagU = 1;
+                Write_Text_To_File(flagU, processID);
+                // exit(0);
+                return -1;
             case 'D':
                 printf("\nDefault:  n         = %d ", N);
                 printf("\n          Init      = rand");
                 printf("\n          maxnum    = 5 ");
                 printf("\n          P         = 0 \n\n");
-                exit(0);
+                return -1;
                 break;
             case 'I':
                 --argc;

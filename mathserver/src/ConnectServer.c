@@ -42,8 +42,8 @@ void initialize(int port){
         printf("Error in binding.\n");
         exit(1);
     }
-    // cnt will keep track of connected clients by incrementing every time a new connection is established
-    cnt =0;
+    // client will keep track of connected clients by incrementing every time a new connection is established
+    client =0;
     
 };
 
@@ -61,69 +61,59 @@ void serverInterface(){
             exit(1);
         }
  
-        // Increment cnt upon new connection and print message
-        cnt++;
-        printf("Connected with client: %d  \n",cnt);
+        // Increment client upon new connection and print message
+        client++;
+        printf("Connected with client: %d  \n",client);
         buffer = malloc(1024);
         // Create new child process for the new connection
         if ((childpid = fork()) == 0) {
             // Closing the server socket id
             close(sockfd);
-            char cntHolder[4];
-            sprintf(cntHolder, "%d", cnt);
-            send(clientSocket, cntHolder, strlen(cntHolder), 0); // Send what connection ID the client has to the client
+            char clientHolder[4];
+            sprintf(clientHolder, "%d", client);
+            send(clientSocket, clientHolder, strlen(clientHolder), 0); // Send what connection ID the client has to the client
             // While connected the server should be able to take new commands
             while(connected){
-                printf("REDO FÖR NÄSTA \n");
+                // printf("REDO FÖR NÄSTA \n");
                 int res = recv(clientSocket, buffer, 1024, 0); // Receive the client command
                 if(res == 0){
                     close(clientSocket);
                     kill(getpid(), SIGKILL);
                     break;
                 }
-                printf("Client: %d commanded: ", cnt);
+                printf("Client: %d commanded: ", client);
                 puts(buffer);
                 if(buffer[0] =='k'){ // If client commanded kmeans
                     //Variables for handling of size, id, path to input file, k and N
-                    int size = 4096;
-                    int pIDKmeans = cnt;
+                    int size = 1024;
+                    int pIDKmeans = client;
                     char path[70];
-                    char k[1024];
                     int iteration; //Iteration = N
-                    sprintf(path, "../../computed_results/server_inputs/kmeans_client%d_input.txt", cnt);
+                    sprintf(path, "../../computed_results/server_inputs/kmeans_client%d_input.txt", client);
 
                     //Receive input file from client
                     iteration = recFile(pIDKmeans, size, path);
 
                     //Read buffer and perform the command from client
-                    commandRes = readBuffer(buffer,k, iteration, path);
-                    if (commandRes == -1)
-                    {
-                        send(clientSocket, "Faulty input, please input new command!",40, 0);
-                    }
+                    runAlgorithm(buffer, iteration, path);
+
                     bzero(path, sizeof(path)); // Clear path array
                     //Path is replaced to be the results folder
-                    sprintf(path,"../../computed_results/server_results/kmeans%d_sol.txt",cnt);
+                    sprintf(path,"../../computed_results/server_results/kmeans%d_sol.txt",client);
                     //Send back the result file.  
                     sendFile(pIDKmeans,size, path);
-                    bzero(buffer, sizeof(buffer)); // Clear buffer
                 }
-                else{
-                    if(buffer[0] == 'm'){ // If client commanded matinv
-                        commandRes = readBuffer(buffer, 0, 0, 0); // Read/filter the input and perform the client command
-                        if (commandRes == -1)
-                        {
-                            send(clientSocket, "Faulty input, please input new command!",40, 0);
-                        }
-                        int pID = cnt; // Clients connection ID
-                        char path[70];
-                        sprintf(path,"../../computed_results/server_results/matinv_client%d_sol.txt",pID);
-                        int size = 4096;
-                        sendFile(pID, size, path); // Send the result file to the client
-                        bzero(buffer, sizeof(buffer)); // Clear buffer
-                    }
+                else if(buffer[0] == 'm'){ // If client commanded matinv
+                    int size = 4096;
+                    int pID = client; // Clients connection ID
+                    char path[70];
+
+                    runAlgorithm(buffer, 0, 0); // Read/filter the input and perform the client command
+
+                    sprintf(path,"../../computed_results/server_results/matinv_client%d_sol.txt",pID);
+                    sendFile(pID, size, path); // Send the result file to the client
                 }
-                commandRes = 0;
+                bzero(buffer, sizeof(buffer)); // Clear buffer
             }
         }
     }
@@ -131,40 +121,33 @@ void serverInterface(){
     close(clientSocket);
 }
 
-int readBuffer(char* buff, char* k, int N, char* path){
+int runAlgorithm(char* buff, int N, char* path){
     if(buff[0] == 'k'){ // Kmeans is to be run
         char** tmpBuff = malloc(1024);
+        char* k = malloc(20);
+
         tmpBuff = readMessage(buff, tmpBuff); // Filter the client input
-        int i=0;
-        char* k;
-        int flag=0;
-        k = malloc(20);
-        for(int i=0; i<len; i++){
-            if(strncmp(tmpBuff[i],"-k", 2) == 0){
-                k = tmpBuff[i+1];
-                flag=1;
-                break;
-            }
-        }
-        if(!flag){
-            strcpy(k, "9");
-        }
-        // printf("K: %s", k);
-        start_kmeans(k, N, path, cnt); // Run k-means algorithm
+        k = getK(tmpBuff, k);
+
+        start_kmeans(k, N, path, client); // Run k-means algorithm
         free(k);
+
         if (remove(path) == 0){ // Remove input file after reading the data in kmeans
             printf("Input file deleted successfully!\n");
         } else {
             printf("Failed to delete Input file!\n");
         }
+
         freeMessage(tmpBuff, buff[0]); // Free tmpBuff, buff[0] is a flag
         return 0; // Done
     }
     else if(buff[0] == 'm'){ // Matinv is to be run
         char** tmpBuff = malloc(1024);
         tmpBuff = readMessage(buff, tmpBuff); // Filter the client input
-        start_mat(countArg, tmpBuff, cnt); // Run the matinv algorithm
+
+        start_mat(countArg, tmpBuff, client); // Run the matinv algorithm
         freeMessage(tmpBuff, buff[0]); // Free tmpBuff, buff[0] is a flag
+
         return 0; // Done
     }
     else { // Faulty command provided
@@ -177,6 +160,7 @@ void sendFile(int pID, int size, char* path){
     char* data = malloc(size);
     FILE* f; // New file descriptor
     f = fopen(path, "r"); // Open 'path' in read mode
+
     while(fgets(data, size, f) != NULL){ // As long as lines are found, send them to client
         if(send(clientSocket, data, size, 0) == -1){
             perror("Sending data failed");
@@ -187,7 +171,9 @@ void sendFile(int pID, int size, char* path){
     }
     fclose(f); // Close file descriptor
     free(data);
+
     send(clientSocket, "\n.\n", 4, 0); // Data transmission completed
+
     if (remove(path) == 0){ // Remove file after sending the data to the client
         printf("Solution file deleted successfully!\n");
     } else {
@@ -201,13 +187,13 @@ int recFile(int pID, int size, char* path){
     f = fopen(path, "w"); // Open file 'path' in write-mode
     int n=0; 
     int iteration =0;
+
     while(1){
         n = recv(clientSocket, data, size, 0); // Receive n bytes of data
         iteration++;
-        printf("DATA: %s, N: %d", data, n);
-        if (strcmp(data, "\n.\n") ==0) // When transmission is complete
+        fflush(stdin);
+        if (strcmp(data, "\n.\n") ==0 && n ==4) // When transmission is complete
         {
-            printf("KLARA NU DED\n");
             iteration--;
             bzero(data, size);
             break;
@@ -217,33 +203,34 @@ int recFile(int pID, int size, char* path){
     }
     fclose(f); // Close file
     free(data);
+
     return iteration; // Return number of lines in received file
 }
 
 char** readMessage(char* buff, char** tmpBuff){
     char* newBuff = malloc(1024);
-    int j;
-    j=0;
+    int j=0;
+
     // Global ints
-    len=0;
+    arg=0;
     countArg=0;
     for (int i=0; i<1024; i++)          
     {
         newBuff[j] = buff[i]; // Copy char from buff to newBuff
         j++;
         if(buff[i] == '\0'){ // If the char in buff[i] is a string terminator the command-filtering is done
-            tmpBuff[len] = (char*)malloc(strlen(newBuff)+1);
-            strcpy(tmpBuff[len], newBuff); // Copy the entirety of stored data to tmpBuff for return
-            len++;
+            tmpBuff[arg] = (char*)malloc(strlen(newBuff)+1);
+            strcpy(tmpBuff[arg], newBuff); // Copy the entirety of stored data to tmpBuff for return
+            arg++;
             free(newBuff);
             break;
         }
         if (buff[i] == ' '){ // If whitespace is found, replace it with '\0'
             countArg++;
-            tmpBuff[len] = (char*)malloc(strlen(newBuff)+1);
+            tmpBuff[arg] = (char*)malloc(strlen(newBuff)+1);
             newBuff[j] = '\0';
-            strcpy(tmpBuff[len], newBuff);
-            len++;
+            strcpy(tmpBuff[arg], newBuff);
+            arg++;
             j=0;
             free(newBuff);
             newBuff = malloc(1024);
@@ -253,8 +240,24 @@ char** readMessage(char* buff, char** tmpBuff){
     return tmpBuff; // Return char** containing the fully filtered client command
 }
 
+char* getK(char** tmpBuff, char *k){
+    int flag=0;
+    for(int i=0; i<arg; i++){
+        if(strncmp(tmpBuff[i],"-k", 2) == 0){
+            k = tmpBuff[i+1];
+            flag=1;
+            break;
+        }
+    }
+    if(!flag){
+        //Assume k=9 if no argument
+        strcpy(k, "9");
+    }
+    return k;
+
+}
 void freeMessage(char** tmpBuff, char check){
-    // int j = len;
+    // int j = arg;
     // if(check == 'm'){
     //     j--;
     // }
@@ -263,5 +266,5 @@ void freeMessage(char** tmpBuff, char check){
     //     free(tmpBuff[i]);
     // }
     // free(tmpBuff);
-    // len = 0;
+    // arg = 0;
 }

@@ -7,8 +7,7 @@ void initialize(int port, char* ip){
         mkdir("../../computed_results", 0777);
     }
 
-    clientSocket = socket(AF_INET,
-                          SOCK_STREAM, 0);
+    clientSocket = socket(AF_INET, SOCK_STREAM, 0);
  
     if (clientSocket < 0) {
         printf("Error in connection.\n");
@@ -16,19 +15,16 @@ void initialize(int port, char* ip){
     }
     printf("Client Socket is created.\n");
  
-    // Initializing socket structure with NULL
+    // Initializing socket structure
     memset(&cliAddr, '\0', sizeof(cliAddr));
  
-    // Initializing buffer array with NULL
+    // Initializing buffer
     memset(buffer, '\0', sizeof(buffer));
  
     // Assigning port number and IP address
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
- 
-    // 127.0.0.1 is Loopback IP
-    serverAddr.sin_addr.s_addr
-        = inet_addr(ip);
+    serverAddr.sin_addr.s_addr = inet_addr(ip);
 
 };
 
@@ -46,6 +42,7 @@ void connectToServer(char clientNr){
 
 void clientInterface(){
     int connected =1;
+    int helpFlag = 0;
     char clientNmbr[4];
     unsigned int c_nr;
     if (recv(clientSocket, buffer, 1024, 0)< 0) {
@@ -57,89 +54,86 @@ void clientInterface(){
         c_nr = (u_int64_t)clientNmbr;
         bzero(buffer, sizeof(buffer));
     }
-    newMsg = NULL;
-    while (connected == 1) {
+    // printf("Client%s: ", clientNmbr);
 
-        getline(&newMsg, &len, stdin);
-        send(clientSocket, newMsg,strlen(newMsg), 0);
-        fflush(stdin);
-        // recv() receives the message
-        // from server and stores in buffer
-        int matrixFileCount = 0;
-        int kmeansFileCount = 0;
-        FILE* fp;
-        int size = 4096;
-        char* data = malloc(size);
-        DIR *directory;
-        int fileValue = 8; // Value of dir entry being a file
+    newMsg = NULL;
+    while (connected) {
         char path[70]; // Array holding path+filename of result file
-        directory = opendir("../../computed_results");
-        if (directory == NULL) // If directory could not be opened
-        {
-            printf("Could not open computed_results directory \n");
-            break;
-        }
-        while ((entry = readdir(directory)) != NULL) // Check all files in computed_results dir
-        {
-            if (entry->d_type == fileValue && entry->d_name[0] == 'm')
-            {
-                matrixFileCount++;
-            }
-            else if (entry->d_type == fileValue && entry->d_name[0] == 'k'){
-                kmeansFileCount++;
-            }
-        }
-        if (closedir(directory) == -1)
-        {
-            printf("Failed to close directory\n");
-            break;
-        }
+        matrixFileCount = 0;
+        kmeansFileCount = 0;
+        int size = 4096;
         char** retBuff = malloc(1024);
+
+        printf("Client%s: ", clientNmbr);
+        //Get line of input from user
+        getline(&newMsg, &len, stdin);
+        //Send to server
+        send(clientSocket, newMsg,strlen(newMsg), 0);
+        //Flush stdin
+        fflush(stdin);
+        //Counting the amount of files
+        if(fileCounter() == -1){
+            break;
+        }
+        //Read input from user
         retBuff = readMessage(newMsg, retBuff);
-        if(retBuff[0][0] == 'k'){
-            char* data = malloc(size);
-            FILE* f;
-            char* path_input = malloc(70);
+        // bzero(newMsg);
+        if(strncmp(retBuff[0], "kmeans",6)==0){
             int flag=0;
-            bzero(path, sizeof(path));
-            // printf("ARG: %d \n", arg);
+            char* path_input = malloc(70);
+
+
+            //Check if using command -f for file
             if(arg >= 3){
                 for(int i=0; i<arg; i++){
                     if(strncmp(retBuff[i],"-f", 2) == 0){
-                        printf("retBuff: %s \n", retBuff[i+1]);
-                        // strcpy(path_input, retBuff[i+1]);
                         path_input = retBuff[i+1];
                         flag=1;
                         break;
                     }
                 }
             }
+            //If no file use standard kmeans-data.txt
+            size=1024;
             if(!flag){
                 strcpy(path_input, "kmeans-data.txt");
             }
-            // printf("PATH: %s, SIZE: %d \n", path_input, size);
             sendFile(size, path_input, retBuff);
-            // printf("PATH2: \n");
+
             free(path_input);
-            // bzero(path, sizeof(path));
+            
+            //Combine resultfile with respective number, then recieve
             sprintf(path, "../../computed_results/kmeans%s_soln%d.txt", clientNmbr,kmeansFileCount);
             recFile(size, path);
 
-            // send(clientSocket, fp,sizeof(fp), 0);
-            free(data);        
         }
-        else {
+        else if (strncmp(retBuff[0], "matinvpar",9)==0) {
+            if (arg >= 2)
+            {
+                for(int i=0; i<arg; i++){
+                    if(strncmp(retBuff[i],"-h", 2) == 0 || strncmp(retBuff[i],"-u", 2) == 0){
+                        helpFlag = 1;
+                        break;
+                    }
+                }
+            }
             sprintf(path, "../../computed_results/matinv_client%s_soln%d.txt", clientNmbr,matrixFileCount);
             recFile(size, path);
+            if (helpFlag == 1)
+            {
+                helpMessage(path);
+            }
+        }
+        else{
+            printf("WRONG INPUT\n");
+            printf("Available options:\n");
+            printf("[kmeans]\n");
+            printf("[matinvpar]\n");
         }
         free(retBuff);
-
-        // puts(buffer);
-        // bzero(buffer, sizeof(buffer));
-        // Printing the message on screen
+        bzero(path, sizeof(path));
     }
     close(clientSocket);
-
  }
 
 void sendFile(int size, char* path, char** retBuff){
@@ -151,7 +145,7 @@ void sendFile(int size, char* path, char** retBuff){
         // printf("%s \n", data);
         if(send(clientSocket, data, size, 0) == -1){
             perror("Sending data failed");
-            exit(1);
+            exit(0);
         }
         bzero(data, size);
     }
@@ -167,10 +161,10 @@ int recFile(int size, char* path){
     int n;
     while(1){
         n = recv(clientSocket, data, size, 0);
-        // printf("DATA: %s", data);        
-        if (strcmp(data, "\n.\n")==0)
+        fflush(stdin);
+        if (strcmp(data, "\n.\n")==0 || n==4)
         {   
-            printf("KLARA NU DED\n");
+            printf("Succesfuly recieved\n");
             break;
         }
         fprintf(f, "%s", data);
@@ -212,7 +206,48 @@ char** readMessage(char* buff, char** tmpBuff){
         }
             
     }
-    // free(newBuff);
     return tmpBuff;
-    // free(tmpBuff);
+}
+
+int fileCounter(){
+    DIR *directory;
+    int fileValue = 8; // Value of dir entry being a file
+    directory = opendir("../../computed_results");
+    if (directory == NULL) // If directory could not be opened
+    {
+        printf("Could not open computed_results directory \n");
+        return -1;
+    }
+    while ((entry = readdir(directory)) != NULL) // Check all files in computed_results dir
+    {
+        if (entry->d_type == fileValue && entry->d_name[0] == 'm')
+        {
+            matrixFileCount++;
+        }
+        else if (entry->d_type == fileValue && entry->d_name[0] == 'k'){
+            kmeansFileCount++;
+        }
+    }
+    if (closedir(directory) == -1)
+    {
+        printf("Failed to close directory\n");
+        return -1;
+    }
+    return 0;
+
+}
+
+void helpMessage(char* path){
+    char textBuff[70];
+    FILE *rf;
+    rf = fopen(path, "r");
+    if (rf == NULL)
+    {
+        printf("Help-file cannot be opened");
+    }
+    while (fgets(textBuff, 70, rf) != NULL)
+    {
+        printf("%s", textBuff);
+    }
+    fclose(rf);
 }

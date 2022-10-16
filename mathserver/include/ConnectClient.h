@@ -14,6 +14,9 @@
 
 
 int clientSocket, ret;
+int matrixFileCount;
+int kmeansFileCount;
+
 size_t len;
 int arg;
 // Client socket structure
@@ -36,6 +39,6 @@ void clientInterface();
 char** readMessage(char* buff, char** tmpBuff);
 void sendFile(int size, char* path, char **retBuff);
 int recFile(int size, char* path);
-
-
+int fileCounter();
+void helpMessage(char* path);
 #endif
