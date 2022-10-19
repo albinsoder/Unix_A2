@@ -14,3 +14,4 @@ mathserver/src/kmeans-results.txt
 computed_results/matinv_client2_soln0.txt
 mathserver/src/kmeans-data-server.txt
 mathserver/src/kmeans-results.txt
+mathserver/objects/hello.txt
