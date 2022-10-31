@@ -269,7 +269,8 @@ Read_Options(int argc, char** argv, int processID)
                 return -1;
                 break;
             case 'u':
-                printf("\nUsage: matinv [-n problemsize]\n");
+                // printf("\nUsage: matinv [-n problemsize]\n");
+                printf("\n-U nedrans\n");
                 // printf("           [-D] show default values \n");
                 // printf("           [-h] help \n");
                 // printf("           [-I init_type] fast/rand \n");

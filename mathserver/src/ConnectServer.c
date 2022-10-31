@@ -222,6 +222,8 @@ char** readMessage(char* buff, char** tmpBuff){
             tmpBuff[arg] = (char*)malloc(strlen(newBuff)+1);
             strcpy(tmpBuff[arg], newBuff); // Copy the entirety of stored data to tmpBuff for return
             arg++;
+            countArg++;
+
             free(newBuff);
             break;
         }

@@ -73,7 +73,7 @@ void clientInterface(){
         }
         // Read input from user
         retBuff = readMessage(newMsg, retBuff);
-        if(strncmp(retBuff[0], "kmeans",6)==0){ // If client commanded kmeans
+        if(strncmp(retBuff[0], "kmeanspar",9)==0){ // If client commanded kmeans
             int flag=0;
             char* pathInput = malloc(70);
             //Check if using command -f for file
@@ -81,6 +81,7 @@ void clientInterface(){
                 for(int i=0; i<arg; i++){
                     if(strncmp(retBuff[i],"-f", 2) == 0){
                         pathInput = retBuff[i+1];
+                        printf("P: %s", pathInput);
                         flag=1;
                         break;
                     }
@@ -118,10 +119,10 @@ void clientInterface(){
                 helpFlag=0;
             }
         }
-        else{ // If neither kmeans or matinvpar was entered by client
+        else{ // If neither kmeanspar or matinvpar was entered by client
             printf("WRONG INPUT\n");
             printf("Available options:\n");
-            printf("[kmeans]\n");
+            printf("[kmeanspar]\n");
             printf("[matinvpar]\n");
         }
         free(retBuff);
@@ -157,7 +158,7 @@ int recFile(int size, char* path){
         fflush(stdin);
         if (strcmp(data, "\n.\n")==0 || n==4) // Check if transmission is completed
         {   
-            printf("Successfully received\n");
+            printf("Received the solution: %s\n", path);
             break;
         }
         fprintf(f, "%s", data); // Write data to file
@@ -177,6 +178,7 @@ char** readMessage(char* buff, char** tmpBuff){
     {
         newBuff[j] = buff[i];
         j++;
+        printf("N: %s \n", newBuff);
         if(buff[i] == '\n'){ // If newline is found, end of command is found
             tmpBuff[arg] = (char*)malloc(strlen(newBuff)+1);
             newBuff[j-1] = '\0'; // Let null termination take the newlines place
@@ -187,7 +189,7 @@ char** readMessage(char* buff, char** tmpBuff){
         }
         if (buff[i] == ' '){ // If whitespace is found, the end of a parameter has been found
             tmpBuff[arg] = (char*)malloc(strlen(newBuff)+1);
-            newBuff[j] = '\0'; // Add null termination to the parameter
+            newBuff[j-1] = '\0'; // Add null termination to the parameter
             strcpy(tmpBuff[arg], newBuff); // Copy filtered arg to tmpBuff
             arg++;
             j=0;
