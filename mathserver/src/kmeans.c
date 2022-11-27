@@ -45,9 +45,11 @@ int get_closest_centroid(int i, int k)
     for (int c = 0; c < k; c++)
     { // For each centroid
         // Calculate the square of the Euclidean distance between that centroid and the point
+        pthread_mutex_lock(&lock);
         xdist = data[i].x - cluster[c].x;
         ydist = data[i].y - cluster[c].y;
         dist = xdist * xdist + ydist * ydist; // The square of Euclidean distance
+        pthread_mutex_unlock(&lock);
         if (dist <= min_dist)
         {
             min_dist = dist;
@@ -93,43 +95,55 @@ void* assign_clusters_to_points(void* id)
             something_changed = true;
         }
     }
+    // update_cluster_centers(start,end);
+    // bzero(count, 32);
+    // bzero(temp, 32);
 }
 
-void update_cluster_centers()
+void update_cluster_centers(int start, int end)
 {
     /* Update the cluster centers */
+    int c;
+    int counter =0;
+
     int count[MAX_CLUSTERS] = { 0 }; // Array to keep track of the number of points in each cluster
     point temp[MAX_CLUSTERS] = { 0.0 };
-    int c;
-
 
     for (int i = 0; i < N; i++)
     {
+        // pthread_mutex_lock(&lock);
         c = data[i].cluster;
         count[c]++;
         temp[c].x += data[i].x;
         temp[c].y += data[i].y;
+        // pthread_mutex_unlock(&lock);
 
     }
-
+    
     for (int i = 0; i < k; i++)
     {
         cluster[i].x = temp[i].x / count[i];
         cluster[i].y = temp[i].y / count[i];
     }
 
+    // pthread_barrier_wait(&barrier);
+    
 
+
+}
+void update_cluster_centers_continue(){
+    // printf("HEJ\n");
 }
 
 int kmean(int k)
 {    
     children = malloc(N * sizeof(pthread_t));
-    int n_threads = 8;           // Number of threads to be created
+    int n_threads = 4;           // Number of threads to be created
     int rest=0;
     int factor = 0;
     int flag = 0;
     int iter = 0;
-
+    pthread_barrier_init(&barrier, NULL, n_threads);                         // Initialize barrier to wait for n_threads amount
     if(N < n_threads){           //If number of threads is less than size, do N threads
         n_threads=N;
         rest = 0;
@@ -170,7 +184,8 @@ int kmean(int k)
         for (int id = 0; id < n_threads; id++) {
             pthread_join(children[id], NULL);                                 // Collect/join result from the threads
         }
-        update_cluster_centers();
+        update_cluster_centers(0, 0);
+        // update_cluster_centers_continue();
 
     } while (something_changed);
     free(children);
@@ -211,7 +226,7 @@ int start_kmeans(char* k, int N, char* path, int pID)
 }
 // int main()
 // {
-//     read_data(9, 100000, "kmeans-data2.txt"); 
+//     read_data(9, 1797, "../objects/kmeans-data.txt"); 
 //     kmean(k);
 //     write_results(1);
 

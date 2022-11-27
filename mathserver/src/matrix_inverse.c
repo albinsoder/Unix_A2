@@ -210,12 +210,16 @@ Write_To_File(matrix M, int processID)
 }
 
 void 
-Write_Text_To_File(int flag, int processID){
+Write_Text_To_File(int flag, int processID, char* prog, char* argv){
     int pID = processID;
     char path[70];
     sprintf(path,"../../computed_results/server_results/matinv_client%d_sol.txt",pID);
     fp = fopen(path, "w");
-    if (flag == 1)
+    if (flag == 0)
+    {
+        fprintf(fp, "\nHELP: try matinv -u \n\n");
+    }
+    else if (flag == 1)
     {
         fprintf(fp, "\nUsage: matinvpar \n");
         fprintf(fp, "           [-n problemsize] \n");
@@ -224,16 +228,17 @@ Write_Text_To_File(int flag, int processID){
         fprintf(fp, "           [-I init_type] fast/rand \n");
         fprintf(fp, "           [-m maxnum] max random no \n");
     }
-    else if (flag == 0)
-    {
-        fprintf(fp, "\nHELP: try matinv -u \n\n");
-    }
     else if (flag == 2)
     {
         fprintf(fp, "\nDefault:  n         = %d ", N);
         fprintf(fp, "\n          Init      = rand");
         fprintf(fp, "\n          maxnum    = 5 ");
         fprintf(fp, "\n          P         = 0 \n\n");
+    }
+    else if (flag == 3)
+    {
+        fprintf(fp, "%s: ignored option: -%s\n", prog, argv);
+        fprintf(fp, "HELP: try %s -u \n\n", prog);
     }
     fclose(fp);
 }
@@ -250,7 +255,7 @@ Init_Default()
 int
 Read_Options(int argc, char** argv, int processID)
 {
-    int flagH, flagU, flagD = -1;
+    int flagH, flagU, flagD, flagDefault = -1;
     char* prog;
     prog = *argv;
     while (++argv, --argc > 0)
@@ -263,21 +268,20 @@ Read_Options(int argc, char** argv, int processID)
             case 'h':
                 // printf("\nHELP: try matinv -u \n\n");
                 flagH = 0;
-                Write_Text_To_File(flagH, processID);
+                Write_Text_To_File(flagH, processID, prog, *argv);
                 flagH = -1;
                 // exit(0);
                 return -1;
                 break;
             case 'u':
                 // printf("\nUsage: matinv [-n problemsize]\n");
-                printf("\n-U nedrans\n");
                 // printf("           [-D] show default values \n");
                 // printf("           [-h] help \n");
                 // printf("           [-I init_type] fast/rand \n");
                 // printf("           [-m maxnum] max random no \n");
                 // printf("           [-P print_switch] 0/1 \n");
                 flagU = 1;
-                Write_Text_To_File(flagU, processID);
+                Write_Text_To_File(flagU, processID, prog, *argv);
                 flagU = -1;
                 // exit(0);
                 return -1;
@@ -288,7 +292,7 @@ Read_Options(int argc, char** argv, int processID)
                 // printf("\n          maxnum    = 5 ");
                 // printf("\n          P         = 0 \n\n");
                 flagD = 2;
-                Write_Text_To_File(flagD, processID);
+                Write_Text_To_File(flagD, processID, prog, *argv);
                 flagD = -1;
                 return -1;
                 break;
@@ -305,8 +309,12 @@ Read_Options(int argc, char** argv, int processID)
                 PRINT = atoi(*++argv);
                 break;
             default:
-                printf("%s: ignored option: -%s\n", prog, *argv);
-                printf("HELP: try %s -u \n\n", prog);
+                flagDefault = 3;
+                // printf("%s: ignored option: -%s\n", prog, *argv);
+                // printf("HELP: try %s -u \n\n", prog);
+                Write_Text_To_File(flagDefault, processID, prog, *argv);
+                flagDefault = -1;
+                return -1;
                 break;
             }
 }

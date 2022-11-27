@@ -32,7 +32,7 @@ void find_inverse();
 void Init_Matrix(void);
 void Print_Matrix(matrix, char name[]);
 void Write_To_File(matrix, int); // Write matrix M to file
-void Write_Text_To_File(int, int); // Write help-text to file
+void Write_Text_To_File(int, int, char*, char*); // Write help-text to file
 void Init_Default(void);
 int Read_Options(int, char**, int);
 int start_mat (int, char**, int); // Callable 'main' for matrix inversation

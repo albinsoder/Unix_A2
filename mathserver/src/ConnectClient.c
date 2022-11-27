@@ -81,7 +81,6 @@ void clientInterface(){
                 for(int i=0; i<arg; i++){
                     if(strncmp(retBuff[i],"-f", 2) == 0){
                         pathInput = retBuff[i+1];
-                        printf("P: %s", pathInput);
                         flag=1;
                         break;
                     }
@@ -100,12 +99,13 @@ void clientInterface(){
             recFile(size, path);
         }
         else if (strncmp(retBuff[0], "matinvpar",9)==0) { // If matinv was commanded by client
-            // Check if client asked for any of the help commands
+            // Check if client commanded for any of the non-help commands
+            helpFlag=1;
             if (arg >= 2)
             {
                 for(int i=0; i<arg; i++){
-                    if(strncmp(retBuff[i],"-h", 2) == 0 || strncmp(retBuff[i],"-u", 2) == 0 || strncmp(retBuff[i],"-D", 2) == 0){
-                        helpFlag = 1;
+                    if(strncmp(retBuff[i],"-n", 2) == 0 || strncmp(retBuff[i],"-I", 2) == 0 || strncmp(retBuff[i],"-P", 2) == 0 || strncmp(retBuff[i],"-m", 2) == 0){
+                        helpFlag = 0;
                         break;
                     }
                 }
@@ -116,7 +116,7 @@ void clientInterface(){
             if (helpFlag == 1) // If any of the help commands were used, print contents of result file to client
             {
                 helpMessage(path);
-                helpFlag=0;
+                // helpFlag=1;
             }
         }
         else{ // If neither kmeanspar or matinvpar was entered by client
@@ -178,7 +178,7 @@ char** readMessage(char* buff, char** tmpBuff){
     {
         newBuff[j] = buff[i];
         j++;
-        printf("N: %s \n", newBuff);
+        // printf("N: %s \n", newBuff);
         if(buff[i] == '\n'){ // If newline is found, end of command is found
             tmpBuff[arg] = (char*)malloc(strlen(newBuff)+1);
             newBuff[j-1] = '\0'; // Let null termination take the newlines place
