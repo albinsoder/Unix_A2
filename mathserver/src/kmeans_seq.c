@@ -21,9 +21,9 @@ point cluster[MAX_CLUSTERS]; // The coordinates of each cluster center (also cal
 
 void read_data()
 {
-    N = 1797;
+    N = 86256;
     k = 9;
-    FILE* fp = fopen("../objects/kmeans-data.txt", "r");
+    FILE* fp = fopen("../objects/kmeans2-data.txt", "r");
     if (fp == NULL) {
         perror("Cannot open the file");
         exit(EXIT_FAILURE);
@@ -131,8 +131,7 @@ float float_rand( float min, float max )
 }
 void write_results()
 {
-    printf("HEJ");
-    FILE* fp = fopen("kmeans-results.txt", "w");
+    FILE* fp = fopen("kmeans-results3.txt", "w");
     if (fp == NULL) {
         perror("Cannot open the file");
         exit(EXIT_FAILURE);

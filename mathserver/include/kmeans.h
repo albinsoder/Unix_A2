@@ -36,11 +36,13 @@ point cluster[MAX_CLUSTERS]; // The coordinates of each cluster center (also cal
 
 void read_data(int input_k, int input_N, char* path);
 int get_closest_centroid(int i, int k);
-void* assign_clusters_to_points(void* id);
+bool assign_clusters_to_points();
 void update_cluster_centers();
 int kmean(int k);
 void write_results(int pID);
 // Callable main function for running kmeans
 int start_kmeans(char* k, int N, char* path, int pID);
+void* kmean_thread(void* id);
+
 
 #endif
