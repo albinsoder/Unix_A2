@@ -44,12 +44,9 @@ int get_closest_centroid(int i, int k)
     for (int c = 0; c < k; c++)
     { // For each centroid
         // Calculate the square of the Euclidean distance between that centroid and the point
-        // pthread_mutex_lock(&lock);
-
         xdist = data[i].x - cluster[c].x;
         ydist = data[i].y - cluster[c].y;
         dist = xdist * xdist + ydist * ydist; // The square of Euclidean distance
-        // pthread_mutex_unlock(&lock);
 
         if (dist <= min_dist)
         {
@@ -65,7 +62,8 @@ bool assign_clusters_to_points(int start, int end)
 {
     int old_cluster = -1, new_cluster = -1;
     bool something_changed=false;
-    for (int i = 0; i < N; i++)
+    // printf("start: %d -> end: %d\n", start, end);
+    for (int i = start; i < end; i++)
     {
         // pthread_mutex_lock(&lock);
         old_cluster = data[i].cluster;
@@ -79,13 +77,6 @@ bool assign_clusters_to_points(int start, int end)
         }
         // pthread_mutex_unlock(&lock);
     }
-    // pthread_barrier_wait(&barrier);
-    // printf("%d \n", end);
-    // if(end == N){
-    //     update_cluster_centers(start,end);
-    // }
-    // bzero(count, 32);
-    // bzero(temp, 32);
     return something_changed;
 }
 
@@ -94,16 +85,17 @@ void update_cluster_centers(int start, int end)
     /* Update the cluster centers */
     int c;
     int counter =0;
-
     int count[MAX_CLUSTERS] = { 0 }; // Array to keep track of the number of points in each cluster
     point temp[MAX_CLUSTERS] = { 0.0 };
 
     for (int i = 0; i < N; i++)
     {
+        // pthread_mutex_lock(&lock);
         c = data[i].cluster;
         count[c]++;
         temp[c].x += data[i].x;
         temp[c].y += data[i].y;
+        // pthread_mutex_unlock(&lock);
 
     }
     
@@ -113,13 +105,6 @@ void update_cluster_centers(int start, int end)
         cluster[i].y = temp[i].y / count[i];
 
     }
-    
-    // if(end == N){
-    //     update_cluster_centers_continue();
-    // }
-
-    
-
 }
 
 void update_cluster_centers_continue(){
@@ -129,6 +114,7 @@ void update_cluster_centers_continue(){
     // printf("HEJ\n");
 }
 
+int iter=0;
 void* kmean_thread(void* id)
 {    
     struct th *t_info = (struct th*)id;
@@ -141,16 +127,15 @@ void* kmean_thread(void* id)
         start = t_info->start*t_info->factor;
         end = t_info->end;
     }
-    else if(size_n < 8){      //If size < 8, indicates we have less size than threads
+    else if(size_n < 4){      //If size < 8, indicates we have less size than threads
         thread_div=1;
-        start = t_info->start*thread_div;
+        start = t_info->start+1*thread_div;
         end = (t_info->end)*thread_div;
     } else{                   //Else standard case where we divide workload based on 8 threads
-        thread_div = size_n/8;
+        thread_div = size_n/4;
         start = t_info->start*thread_div;
         end = (t_info->end)*thread_div;
     }
-    int iter=0;
     /*
     struct th:
         start:  where iteration start for thread
@@ -159,9 +144,11 @@ void* kmean_thread(void* id)
         factor: what to multiply with to get the correct iteration for all threads
     */
     do {
+        pthread_mutex_lock(&lock);
         iter++; // Keep track of number of iterations
         something_changed = assign_clusters_to_points(start, end);
         update_cluster_centers(start, end);
+        pthread_mutex_unlock(&lock);
 
     } while (something_changed);
 
@@ -173,7 +160,7 @@ void* kmean_thread(void* id)
 int kmean(int k)
 {    
     children = malloc(N * sizeof(pthread_t));
-    int n_threads = 8;           // Number of threads to be created
+    int n_threads = 4;           // Number of threads to be created
     int rest=0;
     int factor = 0;
     int flag = 0;
