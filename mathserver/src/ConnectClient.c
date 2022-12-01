@@ -110,6 +110,9 @@ void clientInterface(){
                     }
                 }
             }
+            else if(arg == 1){ // If only "matinvpar" was entered
+                helpFlag = 0;
+            }
             // Create new result file and receive resulting data from server and write to the result file
             sprintf(path, "../../computed_results/matinv_client%s_soln%d.txt", clientNmbr,matrixFileCount);
             recFile(size, path);
@@ -120,7 +123,7 @@ void clientInterface(){
             }
         }
         else{ // If neither kmeanspar or matinvpar was entered by client
-            printf("WRONG INPUT\n");
+            printf("WRONG INPUT/HELP\n");
             printf("Available options:\n");
             printf("[kmeanspar]\n");
             printf("[matinvpar]\n");
@@ -229,7 +232,7 @@ int fileCounter(){
 }
 
 void helpMessage(char* path){
-    char textBuff[70];
+    char textBuff[80];
     FILE *rf; // New file descriptor
     rf = fopen(path, "r");
     if (rf == NULL)

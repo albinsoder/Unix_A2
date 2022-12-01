@@ -227,6 +227,7 @@ Write_Text_To_File(int flag, int processID, char* prog, char* argv){
         fprintf(fp, "           [-h] help \n");
         fprintf(fp, "           [-I init_type] fast/rand \n");
         fprintf(fp, "           [-m maxnum] max random no \n");
+        fprintf(fp, "           [-P print_switch] 0/1 \n");
     }
     else if (flag == 2)
     {
