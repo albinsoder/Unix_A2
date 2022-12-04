@@ -1,6 +1,5 @@
 #include "../include/kmeans.h"
 
-static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 bool something_changed =false;
 int count[MAX_CLUSTERS] = { 0 }; // Array to keep track of the number of points in each cluster
 point temp[MAX_CLUSTERS] = { 0.0 };
@@ -242,4 +241,4 @@ int start_kmeans(char* k, int N, char* path, int pID)
 //     kmean(k);
 //     write_results(0);
 
-// // }
+// }
