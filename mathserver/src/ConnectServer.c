@@ -83,7 +83,7 @@ void serverInterface(){
                 }
                 printf("Client: %d commanded: ", client);
                 puts(buffer);
-                if(buffer[0] =='k'){ // If client commanded kmeans
+                if(strncmp(buffer,"kmeanspar", 9) == 0){ // If client commanded kmeans
                     //Variables for handling of size, id, path to input file, k and N
                     int size = 1024;
                     int pIDKmeans = client;
@@ -103,7 +103,7 @@ void serverInterface(){
                     //Send back the result file.  
                     sendFile(pIDKmeans,size, path);
                 }
-                else if(buffer[0] == 'm'){ // If client commanded matinv
+                else if(strncmp(buffer,"matinvpar", 9) == 0){ // If client commanded matinv
                     int size = 4096;
                     int pID = client; // Clients connection ID
                     char path[70];
@@ -112,6 +112,15 @@ void serverInterface(){
 
                     sprintf(path,"../../computed_results/server_results/matinv_client%d_sol.txt",pID);
                     sendFile(pID, size, path); // Send the result file to the client
+                }
+                else { // Faulty command provided
+                    char path[70];
+                    sprintf(path, "../../computed_results/server_inputs/kmeans_client%d_input.txt", client);
+                    if (remove(path) == 0){ // Try to remove input file
+                        printf("Input file deleted successfully!\n");
+                    } else {
+                        printf("No input file was deleted!\n");
+                    }
                 }
                 bzero(buffer, sizeof(buffer)); // Clear buffer
             }
@@ -122,7 +131,7 @@ void serverInterface(){
 }
 
 int runAlgorithm(char* buff, int N, char* path){
-    if(buff[0] == 'k'){ // Kmeans is to be run
+    if(strncmp(buffer,"kmeanspar", 9) == 0){ // Kmeans is to be run
         char** tmpBuff = malloc(1024);
         char* k = malloc(20);
 
@@ -141,7 +150,7 @@ int runAlgorithm(char* buff, int N, char* path){
         free(tmpBuff); // Free tmpBuff
         return 0; // Done
     }
-    else if(buff[0] == 'm'){ // Matinv is to be run
+    else if(strncmp(buffer,"matinvpar", 9) == 0){ // Matinv is to be run
         char** tmpBuff = malloc(1024);
         tmpBuff = readMessage(buff, tmpBuff); // Filter the client input
 
@@ -151,7 +160,12 @@ int runAlgorithm(char* buff, int N, char* path){
         return 0; // Done
     }
     else { // Faulty command provided
-        return -1;
+        if (remove(path) == 0){ // Try to remove input file
+            printf("Input file deleted successfully!\n");
+        } else {
+            printf("No input file was deleted!\n");
+        }
+        return 0;
     }
     return 0;
 }
