@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <limits.h>
 #include <pthread.h>
-
+#include <string.h>
 
 #define MAX_POINTS 100000
 #define MAX_CLUSTERS 32
@@ -36,7 +36,7 @@ point cluster[MAX_CLUSTERS]; // The coordinates of each cluster center (also cal
 
 void read_data(int input_k, int input_N, char* path);
 int get_closest_centroid(int i, int k);
-bool assign_clusters_to_points();
+bool assign_clusters_to_points(int start, int end);
 void update_cluster_centers();
 int kmean(int k);
 void write_results(int pID);

@@ -1,7 +1,9 @@
 #include "../include/kmeans.h"
 
-// pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+bool something_changed =false;
+int count[MAX_CLUSTERS] = { 0 }; // Array to keep track of the number of points in each cluster
+point temp[MAX_CLUSTERS] = { 0.0 };
 
 void read_data(int input_k, int input_N, char* path)
 {
@@ -54,51 +56,47 @@ int get_closest_centroid(int i, int k)
             nearest_cluster = c;
         }
     }
-    //printf("-----------\n");
     return nearest_cluster;
 }
 
 bool assign_clusters_to_points(int start, int end)
 {
     int old_cluster = -1, new_cluster = -1;
-    bool something_changed=false;
-    // printf("start: %d -> end: %d\n", start, end);
+
     for (int i = start; i < end; i++)
     {
-        // pthread_mutex_lock(&lock);
         old_cluster = data[i].cluster;
         new_cluster = get_closest_centroid(i, k);
 
-        // pthread_mutex_lock(&lock);
         data[i].cluster = new_cluster; // Assign a cluster to the point i
         if (old_cluster != new_cluster)
         {
             something_changed = true;
         }
-        // pthread_mutex_unlock(&lock);
     }
     return something_changed;
 }
-
-void update_cluster_centers(int start, int end)
+void update_cluster_centers()
 {
     /* Update the cluster centers */
     int c;
-    int counter =0;
-    int count[MAX_CLUSTERS] = { 0 }; // Array to keep track of the number of points in each cluster
-    point temp[MAX_CLUSTERS] = { 0.0 };
+
+    memset(count, 0, sizeof(count));
+    for(int i=0; i<MAX_CLUSTERS; i++){
+        temp[i].cluster = 0;
+        temp[i].x = 0.0;
+        temp[i].y = 0.0;
+    }
 
     for (int i = 0; i < N; i++)
     {
-        // pthread_mutex_lock(&lock);
         c = data[i].cluster;
         count[c]++;
         temp[c].x += data[i].x;
         temp[c].y += data[i].y;
-        // pthread_mutex_unlock(&lock);
 
     }
-    
+
     for (int i = 0; i < k; i++)
     {
         cluster[i].x = temp[i].x / count[i];
@@ -107,21 +105,14 @@ void update_cluster_centers(int start, int end)
     }
 }
 
-void update_cluster_centers_continue(){
-    // printf("HELKLO");
-    // bzero(count, sizeof(count));
-    // bzero(temp, sizeof(temp));
-    // printf("HEJ\n");
-}
 
-int iter=0;
 void* kmean_thread(void* id)
 {    
+    int iter;
     struct th *t_info = (struct th*)id;
     int start, end, size_n, thread_div;
 
     size_n= (int)t_info->size;
-    bool something_changed=false;
 
     if(size_n == -1){         //if size = -1, this indicates its last thread with extra work
         start = t_info->start*t_info->factor;
@@ -144,16 +135,23 @@ void* kmean_thread(void* id)
         factor: what to multiply with to get the correct iteration for all threads
     */
     do {
-        pthread_mutex_lock(&lock);
-        iter++; // Keep track of number of iterations
-        something_changed = assign_clusters_to_points(start, end);
-        update_cluster_centers(start, end);
-        pthread_mutex_unlock(&lock);
+        pthread_barrier_wait(&barrier);
+        if(start == 0){ // First thread is only thread that can set something_changed
+            something_changed = false;
+            iter++; // Keep track of number of iterations
+        }
+        pthread_barrier_wait(&barrier);
+
+        something_changed = assign_clusters_to_points(start,end);
+
+        pthread_barrier_wait(&barrier);
+        if(start == 0){
+            update_cluster_centers();
+        }
+        pthread_barrier_wait(&barrier);
+
 
     } while (something_changed);
-
-    // printf("Number of iterations taken = %d\n", iter);
-    // printf("Computed cluster numbers successfully!\n");
 
 }
 
@@ -161,11 +159,10 @@ int kmean(int k)
 {    
     children = malloc(N * sizeof(pthread_t));
     int n_threads = 4;           // Number of threads to be created
-    int rest=0;
-    int factor = 0;
-    int flag = 0;
-    int iter = 0;
-    // pthread_barrier_init(&barrier, NULL, 1); // Initialize barrier to wait for n_threads amount
+    int rest=0; // Modulus rest
+    int factor = 0; //how much to multiply with if n%threads!= 0
+    int flag = 0; //flag to indicate n%threads!=0
+    pthread_barrier_init(&barrier, NULL, n_threads); // Initialize barrier to wait for n_threads amount
     if(N < n_threads){ //If number of threads is less than size, do N threads
         n_threads=N;
         rest = 0;
@@ -203,16 +200,12 @@ int kmean(int k)
         }
     }
     for (int id = 0; id < n_threads; id++) {
-        pthread_join(children[id], NULL);                                 // Collect/join result from the threads
+        pthread_join(children[id], NULL); // Collect/join result from the threads
     }
-        // update_cluster_centers(0, 0);
-        // update_cluster_centers_continue();
 
     free(children);
     free(t_info);
-    // printf("Number of iterations taken = %d\n", iter);
-    // printf("Computed cluster numbers successfully!\n");
-
+    pthread_barrier_destroy(&barrier);
 }
 
 void write_results(int pID)
@@ -233,21 +226,20 @@ void write_results(int pID)
         }
     }
     fclose(fp);
-    // printf("Wrote the results to a file!\n");
 }
 
 int start_kmeans(char* k, int N, char* path, int pID)
 {
-    int input_k = atoi(k);
-    read_data(input_k, N, path); 
-    kmean(input_k);
-    write_results(pID);
+    int input_k = atoi(k); // Number of clusters
+    read_data(input_k, N, path); // Read input file
+    kmean(input_k); // Start kmeans
+    write_results(pID); // Write to file
     return 0;
 }
 // int main()
 // {
-//     read_data(9, 1797, "../objects/kmeans-data.txt"); 
+//     read_data(9, 1797 , "../objects/kmeans-data.txt"); 
 //     kmean(k);
 //     write_results(0);
 
-// }
+// // }
