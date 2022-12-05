@@ -16,7 +16,7 @@
 #include "kmeans.h"
 
 // Setup needed global ints
-int sockfd, ret, cnt, commandRes;
+int sockfd, ret, client, commandRes;
 
 // Set up socket address struct for the server
 struct sockaddr_in serverAddr;
@@ -39,7 +39,7 @@ pid_t childpid;
 char *firstArg;
 char* copyBuffer;
 int countArg;
-int len;
+int arg;
 
 // Setup server socket (IP + port)
 void initialize(int port);
@@ -47,7 +47,7 @@ void initialize(int port);
 void serverInterface();
 // Check input from client, if kmeans or matinv is to be run
 // and perform the asked for calculations
-int readBuffer(char* buff, char k[1024], int N, char* path);
+int runAlgorithm(char* buff, int N, char* path);
 
 // Send file to client (connection number, size of buffer, path to file)
 void sendFile(int pID, int size, char* path);
@@ -55,7 +55,9 @@ void sendFile(int pID, int size, char* path);
 char** readMessage(char* buff, char** tmpBuff);
 // Recieve file (connection number, size of buffer, path to file where recieved data is to be written)
 int recFile(int pID, int size, char* path);
-// Free allocated char buffers
-void freeMessage(char** tmpBuff, char check);
+//Get value k for kmeans
+char* getK(char** tmpBuff, char* k);
+
+// Free allocated char** buffers
 
 #endif

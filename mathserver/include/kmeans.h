@@ -7,9 +7,9 @@
 #include <stdbool.h>
 #include <limits.h>
 #include <pthread.h>
+#include <string.h>
 
-
-#define MAX_POINTS 4096
+#define MAX_POINTS 100000
 #define MAX_CLUSTERS 32
 
 typedef struct point
@@ -18,12 +18,6 @@ typedef struct point
     float y; // The y-coordinate of the point
     int cluster; // The cluster that the point belongs to
 } point;
-
-typedef struct thread_info
-{
-    int new_cluster;
-    int old_cluster;
-} thread_info;
 
 struct th
 {
@@ -39,15 +33,16 @@ int	N;		// number of entries in the data
 int k;      // number of centroids
 point data[MAX_POINTS];		// Data coordinates
 point cluster[MAX_CLUSTERS]; // The coordinates of each cluster center (also called centroid)
-thread_info t[MAX_POINTS];
 
 void read_data(int input_k, int input_N, char* path);
 int get_closest_centroid(int i, int k);
-void* assign_clusters_to_points(void* id);
+bool assign_clusters_to_points(int start, int end);
 void update_cluster_centers();
-void update_cluster_centers_continue(int count[MAX_CLUSTERS], point temp[MAX_CLUSTERS], int start);
 int kmean(int k);
 void write_results(int pID);
+// Callable main function for running kmeans
 int start_kmeans(char* k, int N, char* path, int pID);
+void* kmean_thread(void* id);
+
 
 #endif

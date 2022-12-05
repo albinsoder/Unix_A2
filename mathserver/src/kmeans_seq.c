@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <limits.h>
 
-#define MAX_POINTS 4096
+#define MAX_POINTS 100000
 #define MAX_CLUSTERS 32
 
 typedef struct point
@@ -23,7 +23,7 @@ void read_data()
 {
     N = 1797;
     k = 9;
-    FILE* fp = fopen("kmeans-data.txt", "r");
+    FILE* fp = fopen("../objects/kmeans-data.txt", "r");
     if (fp == NULL) {
         perror("Cannot open the file");
         exit(EXIT_FAILURE);
@@ -33,6 +33,7 @@ void read_data()
     float temp;
     for (int i = 0; i < N; i++)
     {
+        // printf("%f %f\n", &data[i].x, &data[i].y);
         fscanf(fp, "%f %f", &data[i].x, &data[i].y);
         data[i].cluster = -1; // Initialize the cluster number to -1
     }
@@ -42,7 +43,7 @@ void read_data()
     for (int i = 0; i < k; i++)
     {
         int r = rand() % N;
-        printf("Cluster: %f \n", data[r].x);
+        // printf("Cluster: %f \n", data[r].x);
         cluster[i].x = data[r].x;
         cluster[i].y = data[r].y;
     }
@@ -123,9 +124,14 @@ int kmeans(int k)
     printf("Computed cluster numbers successfully!\n");
 }
 
+float float_rand( float min, float max )
+{
+    float scale = rand() / (float) RAND_MAX; /* [0, 1.0] */
+    return min + scale * ( max - min );      /* [min, max] */
+}
 void write_results()
 {
-    FILE* fp = fopen("kmeans-results5.txt", "w");
+    FILE* fp = fopen("kmeans-results3.txt", "w");
     if (fp == NULL) {
         perror("Cannot open the file");
         exit(EXIT_FAILURE);
@@ -137,9 +143,16 @@ void write_results()
             fprintf(fp, "%.2f %.2f %d\n", data[i].x, data[i].y, data[i].cluster);
         }
     }
+    fclose(fp);
+
+    // FILE* fp2 = fopen("kmeans-data2.txt", "w");
+    
+    // for(int i=0; i<100000; i++){
+    //     fprintf(fp2, "%.2f %.2f\n", float_rand(-30.0, 30.0), float_rand(-30.0,30.0));
+    // }
+    // fclose(fp2);
     printf("Wrote the results to a file!\n");
 }
-
 int main()
 {
     read_data(); 
