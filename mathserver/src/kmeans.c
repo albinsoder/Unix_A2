@@ -241,4 +241,5 @@ int start_kmeans(char* k, int N, char* path, int pID)
 //     kmean(k);
 //     write_results(0);
 
+
 // }

@@ -1,6 +1,5 @@
 # Assigment2Project Mathserver
 
-## How to compile:
 
 ```
 $ cd /Assigment2Project/mathserver
